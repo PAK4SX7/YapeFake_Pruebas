@@ -62,6 +62,33 @@
         #splash-inner.visible { opacity: 1; transform: scale(1) translateY(0); }
         #splash-inner img { width: 100%; height: 100%; object-fit: cover; }
 
+        /* ══ LOADING SCREEN (nuevo: sobre el menú que carga por partes) ══ */
+        #main-loading-overlay {
+            position: fixed; inset: 0; z-index: 8000;
+            background: rgba(0,0,0,0.45);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s ease;
+        }
+        #main-loading-overlay.active { opacity: 1; pointer-events: all; }
+        #main-loading-overlay.gone   { display: none; }
+
+        .main-loading-box {
+            width: 200px; height: 70px; /* ← ANCHO y ALTO de la ventana de carga */
+            background: white;
+            border-radius: 0;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+        }
+
+        .main-loading-spinner {
+            width: 36px; height: 36px;
+            border: 3.5px solid #e8e8e8;
+            border-top-color: #03C7B1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
         /* ══ PANTALLA PRINCIPAL ══ */
         #screen-main {
             position: fixed; inset: 0;
@@ -70,14 +97,8 @@
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
             padding-bottom: 100px;
         }
-        #screen-main.scrollable {
-            overflow-y: auto;
-        }
-        #screen-main.slide-out {
-            transform: translateX(-40px);
-            opacity: 0;
-            pointer-events: none;
-        }
+        #screen-main.scrollable { overflow-y: auto; }
+        #screen-main.slide-out  { transform: translateX(-40px); opacity: 0; pointer-events: none; }
 
         .app-container {
             width: 100%; min-height: 100vh; background: var(--yape-purple);
@@ -85,6 +106,10 @@
             position: relative; max-width: 480px; margin: 0 auto;
             padding-bottom: 0;
         }
+
+        /* Elementos del menú con opacidad inicial 0 para la animación de carga por partes */
+        .main-section { opacity: 0; transition: opacity 0.4s ease; }
+        .main-section.loaded { opacity: 1; }
 
         .header {
             display: flex; align-items: center; justify-content: space-between;
@@ -117,7 +142,6 @@
         .service-item {
             display: flex; flex-direction: column; align-items: center;
             gap: 1.5vw; cursor: pointer; position: relative;
-            animation: fadeIn 0.4s ease forwards;
         }
         .service-icon {
             width: 12.5vw; height: 12.5vw; max-width: 56px; max-height: 56px;
@@ -174,7 +198,7 @@
         .dot.active .dot-progress { animation: fillProgress 6s linear; }
         @keyframes fillProgress { from { width: 0%; } to { width: 100%; } }
 
-        /* ══ BOTTOM PANEL - scrollable content area ══ */
+        /* ══ BOTTOM PANEL ══ */
         .bottom-panel {
             background: white; border-radius: 24px 24px 0 0;
             padding: clamp(4vw, 6vw, 8vw) 4vw 120px 4vw;
@@ -189,10 +213,53 @@
             box-shadow: 0 12px 24px rgba(0,0,0,0.2);
         }
         .balance-left { display: flex; align-items: center; gap: 3vw; cursor: pointer; }
-        .balance-icon { width: 6vw; height: 6vw; max-width: 28px; max-height: 28px; min-width: 20px; min-height: 20px; fill: #742284; }
-        .balance-label { font-size: clamp(14px, 4vw, 18px); font-weight: 500; color: var(--yape-purple); }
-        .balance-value { font-size: clamp(14px, 4vw, 18px); font-weight: 600; color: #1a1a1a; cursor: pointer; transition: opacity 0.2s; }
-        .balance-value.hidden { visibility: hidden; opacity: 0; }
+
+.balance-icon { 
+    width: 8.5vw; 
+    height: 8.5vw; 
+    max-width: 40px; 
+    max-height: 40px; 
+    min-width: 30px; 
+    min-height: 30px; 
+} /* ← Contenedor del ojito */
+
+.balance-icon img { 
+    width: 100%; 
+    height: 100%; 
+    object-fit: contain; 
+}
+
+/* Ojito SVG inline (ojo abierto) — más pequeño + movido */
+.balance-icon img.eye-svg  { 
+    width: 72%; 
+    height: 71%;
+    transform: translate(4px, 4px); /* ← derecha, abajo */
+}
+
+/* Ojito imagen del link (ojo tachado) — más grande */
+.balance-icon img.eye-img  { 
+    width: 100%; 
+    height: 90%; 
+}
+
+.balance-label { 
+    font-size: clamp(14px, 4vw, 18px); 
+    font-weight: 500; 
+    color: var(--yape-purple); 
+}
+
+.balance-value { 
+    font-size: clamp(14px, 4vw, 18px); 
+    font-weight: 600; 
+    color: #1a1a1a; 
+    cursor: pointer; 
+    transition: opacity 0.2s; 
+}
+
+.balance-value.hidden { 
+    visibility: hidden; 
+    opacity: 0; 
+}
 
         /* ══ MOVIMIENTOS ══ */
         .movements-row {
@@ -211,7 +278,6 @@
         .movements-arrow svg { width: 100%; height: 100%; }
         .movements-arrow.open { transform: rotate(180deg); }
 
-        /* Lista de movimientos */
         .movements-list {
             max-height: 0; overflow: hidden;
             transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -241,43 +307,26 @@
         .movement-info { flex: 1; min-width: 0; }
         .movement-name {
             font-size: clamp(13px, 3.8vw, 16px); font-weight: 600;
-            color: #1a1a1a; white-space: nowrap; overflow: hidden;
-            text-overflow: ellipsis;
+            color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-        .movement-datetime {
-            font-size: clamp(11px, 3vw, 13px); color: #999; margin-top: 1px;
-        }
-        .movement-amount {
-            font-size: clamp(14px, 4vw, 17px); font-weight: 700;
-            color: #e05555; white-space: nowrap; flex-shrink: 0;
-        }
+        .movement-datetime { font-size: clamp(11px, 3vw, 13px); color: #999; margin-top: 1px; }
+        .movement-amount { font-size: clamp(14px, 4vw, 17px); font-weight: 700; color: #e05555; white-space: nowrap; flex-shrink: 0; }
         .movement-chevron { flex-shrink: 0; }
         .movement-chevron svg { width: 14px; height: 14px; }
 
-        /* spacer when list is closed */
         #movementsSpacer { margin-bottom: 4vw; }
         #movementsSpacer.hidden { margin-bottom: 0; }
 
-        /* ══ BOTONES FIJOS ABAJO ══ */
+        /* ══ BOTONES FIJOS ══ */
         .action-buttons-fixed {
-            position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 480px;
-            display: flex;
-            gap: 3vw;
-            padding: 3vw 4vw 9vw 4vw;
-            background: white;
-            z-index: 50;
+            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 480px; display: none; gap: 3vw;
+            padding: 3vw 4vw 9vw 4vw; background: white; z-index: 50;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
         }
-
         .action-btn {
             flex: 1; height: 14vw; max-height: 60px; min-height: 48px;
-            border-radius: 4px; /* esquinas cuadradas */
-            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px; display: flex; align-items: center; justify-content: center;
             gap: 2vw; font-size: clamp(13px, 3.8vw, 17px); font-weight: 600;
             cursor: pointer; border: none; transition: transform 0.1s;
         }
@@ -304,310 +353,179 @@
         .modal-btn.cancel { background: var(--yape-gray); color: var(--yape-text); }
         .modal-btn.confirm { background: var(--yape-purple); color: white; }
 
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .service-item:nth-child(1)  { animation-delay: 0.05s; }
-        .service-item:nth-child(2)  { animation-delay: 0.10s; }
-        .service-item:nth-child(3)  { animation-delay: 0.15s; }
-        .service-item:nth-child(4)  { animation-delay: 0.20s; }
-        .service-item:nth-child(5)  { animation-delay: 0.25s; }
-        .service-item:nth-child(6)  { animation-delay: 0.30s; }
-        .service-item:nth-child(7)  { animation-delay: 0.35s; }
-        .service-item:nth-child(8)  { animation-delay: 0.40s; }
-        .service-item:nth-child(9)  { animation-delay: 0.45s; }
-        .service-item:nth-child(10) { animation-delay: 0.50s; }
-        .service-item:nth-child(11) { animation-delay: 0.55s; }
-        .service-item:nth-child(12) { animation-delay: 0.60s; }
-
-        @media (min-width: 481px) { .app-container { border-radius: 0; } }
-        @media (min-width: 768px) {
-            .services-grid { gap: 1.5vw; padding: 1.5vw 3vw; }
-            .service-icon  { width: 12vw; height: 12vw; }
-        }
-
         /* ══ PANTALLA YAPEAR ══ */
         #screen-yapear {
-            position: fixed; inset: 0;
-            background: #ffffff;
-            opacity: 0;
-            pointer-events: none;
+            position: fixed; inset: 0; background: #ffffff;
+            opacity: 0; pointer-events: none;
             transition: opacity 0.5s ease;
             display: flex; justify-content: center; align-items: flex-start;
-            overflow-y: auto; overflow-x: hidden;
-            z-index: 100;
+            overflow-y: auto; overflow-x: hidden; z-index: 100;
         }
-        #screen-yapear.slide-in {
-            opacity: 1;
-            pointer-events: all;
-        }
+        #screen-yapear.slide-in { opacity: 1; pointer-events: all; }
 
         .yapear-container {
-            background: #ffffff;
-            width: 100%; max-width: 400px;
-            min-height: 100vh;
-            display: flex; flex-direction: column;
-            position: relative;
+            background: #ffffff; width: 100%; max-width: 400px;
+            min-height: 100vh; display: flex; flex-direction: column; position: relative;
         }
-
         .yapear-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px;
-            font-weight: bold; font-size: 20px; color: #1a1a1a;
-            flex-shrink: 0;
+            padding: 15px 20px; font-weight: bold; font-size: 20px; color: #1a1a1a; flex-shrink: 0;
         }
         .yapear-icon-btn {
-            cursor: pointer; font-size: 24px;
-            display: flex; align-items: center; justify-content: center;
-            width: 30px; height: 30px;
-            background: none; border: none; color: #1a1a1a;
-            font-weight: bold;
+            cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; background: none; border: none; color: #1a1a1a; font-weight: bold;
         }
-
-        .recipient-section {
-            display: flex; justify-content: center;
-            padding: 20px 0; flex-shrink: 0;
-        }
+        .recipient-section { display: flex; justify-content: center; padding: 20px 0; flex-shrink: 0; }
         .recipient-name {
-            font-size: 22px; color: #555;
-            padding: 5px 10px; border-radius: 5px;
-            outline: none; border: 1px solid transparent;
-            transition: border 0.2s; text-align: center;
-            background: transparent; width: 200px;
+            font-size: 22px; color: #555; padding: 5px 10px; border-radius: 5px;
+            outline: none; border: 1px solid transparent; transition: border 0.2s;
+            text-align: center; background: transparent; width: 200px;
         }
         .recipient-name:focus { border-bottom: 1px solid #ccc; }
         .recipient-name::placeholder { color: #999; }
 
         .amount-section {
             flex-grow: 1; display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
-            margin-top: 20px; width: 100%;
+            align-items: center; justify-content: center; margin-top: 20px; width: 100%;
             position: relative; overflow: hidden;
         }
         .amount-wrapper {
-            position: relative; width: 100%;
-            display: flex; justify-content: center; align-items: center;
-            height: 100px;
+            position: relative; width: 100%; display: flex;
+            justify-content: center; align-items: center; height: 100px;
         }
         .currency-symbol {
             color: #9b59b6; font-size: 30px; font-weight: 500;
-            position: absolute; left: 50%;
-            transform-origin: left center;
-            transition: transform 0.2s ease;
-            pointer-events: none;
+            position: absolute; left: 50%; transform-origin: left center;
+            transition: transform 0.2s ease; pointer-events: none;
         }
         .amount-input {
             color: #790699; font-size: 60px; font-weight: normal;
-            font-family: monospace; line-height: 1;
-            border: none; background: transparent; outline: none;
-            text-align: center; width: 100%; max-width: 280px;
-            display: block; margin: 0 auto;
-            transition: font-size 0.2s ease;
+            font-family: monospace; line-height: 1; border: none; background: transparent;
+            outline: none; text-align: center; width: 100%; max-width: 280px;
+            display: block; margin: 0 auto; transition: font-size 0.2s ease;
         }
         .amount-input::placeholder { color: #790699; font-weight: normal; font-family: monospace; opacity: 1; }
 
         .error-message {
-            background-color: #f0f0f5; color: #555;
-            padding: 8px 16px; border-radius: 20px;
-            font-size: 14px; margin-top: 20px;
-            display: inline-block; transition: opacity 0.3s;
-            white-space: nowrap;
+            background-color: #f0f0f5; color: #555; padding: 8px 16px;
+            border-radius: 20px; font-size: 14px; margin-top: 20px;
+            display: inline-block; transition: opacity 0.3s; white-space: nowrap;
         }
         .error-message.hidden { opacity: 0; pointer-events: none; }
 
-        .input-section {
-            padding: 20px; text-align: center;
-            margin-bottom: 20px; flex-shrink: 0;
-        }
+        .input-section { padding: 20px; text-align: center; margin-bottom: 20px; flex-shrink: 0; }
         .number-input {
-            border: none; border-bottom: 1px solid #ddd;
-            font-size: 18px; color: #333; text-align: center;
-            width: 100%; max-width: 300px; padding: 10px;
+            border: none; border-bottom: 1px solid #ddd; font-size: 18px; color: #333;
+            text-align: center; width: 100%; max-width: 300px; padding: 10px;
             outline: none; background: transparent; margin: 0 auto; display: block;
         }
         .number-input::placeholder { color: #555; font-weight: 400; }
         .number-input:focus { border-bottom: 2px solid #00cba9; }
 
-        .yapear-footer {
-            padding: 20px; display: flex; gap: 15px;
-            padding-bottom: 30px; flex-shrink: 0;
-        }
+        .yapear-footer { padding: 20px; display: flex; gap: 15px; padding-bottom: 30px; flex-shrink: 0; }
         .yapear-btn {
-            flex: 1; padding: 15px; border-radius: 8px;
-            font-size: 16px; font-weight: 500; cursor: pointer;
-            text-align: center; border: none; transition: opacity 0.2s, border-color 0.3s, color 0.3s;
+            flex: 1; padding: 15px; border-radius: 8px; font-size: 16px; font-weight: 500;
+            cursor: pointer; text-align: center; border: none; transition: opacity 0.2s, border-color 0.3s, color 0.3s;
         }
         .yapear-btn:active { opacity: 0.8; }
-        .yapear-btn-secondary {
-            background-color: white;
-            border: 1px solid #ccc;
-            color: #555;
-            transition: border-color 0.3s, color 0.3s;
-        }
-        /* Estado activo del botón Otros bancos */
-        .yapear-btn-secondary.active-otros {
-            border: 2px solid #00cba9;
-            color: #00cba9;
-            font-weight: 700;
-        }
+        .yapear-btn-secondary { background-color: white; border: 1px solid #ccc; color: #555; transition: border-color 0.3s, color 0.3s; }
+        .yapear-btn-secondary.active-otros { border: 2px solid #00cba9; color: #00cba9; font-weight: 700; }
+        .yapear-btn-primary { background-color: #00cba9; color: white; font-weight: bold; box-shadow: 0 2px 5px rgba(0, 203, 169, 0.3); }
 
-        .yapear-btn-primary {
-            background-color: #00cba9; color: white;
-            font-weight: bold; box-shadow: 0 2px 5px rgba(0, 203, 169, 0.3);
-        }
-
-        /* ══ PANTALLA PLIN (pantalla blanca con opción Plin) ══ */
+        /* ══ PANTALLA PLIN ══ */
         #screen-plin {
-            position: fixed; inset: 0;
-            background: #ffffff;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.35s ease;
+            position: fixed; inset: 0; background: #ffffff;
+            opacity: 0; pointer-events: none; transition: opacity 0.35s ease;
             display: flex; justify-content: center; align-items: flex-start;
-            overflow-y: auto; overflow-x: hidden;
-            z-index: 110;
+            overflow-y: auto; overflow-x: hidden; z-index: 110;
         }
-        #screen-plin.active {
-            opacity: 1;
-            pointer-events: all;
-        }
-        .plin-container {
-            background: #ffffff;
-            width: 100%; max-width: 400px;
-            min-height: 100vh;
-            display: flex; flex-direction: column;
-        }
+        #screen-plin.active { opacity: 1; pointer-events: all; }
+        .plin-container { background: #ffffff; width: 100%; max-width: 400px; min-height: 100vh; display: flex; flex-direction: column; }
         .plin-header {
             display: flex; justify-content: space-between; align-items: center;
-            padding: 15px 20px;
-            font-weight: bold; font-size: 20px; color: #1a1a1a;
-            flex-shrink: 0;
+            padding: 15px 20px; font-weight: bold; font-size: 20px; color: #1a1a1a; flex-shrink: 0;
         }
-        .plin-header-btn {
-            cursor: pointer; font-size: 24px;
-            display: flex; align-items: center; justify-content: center;
-            width: 30px; height: 30px;
-            background: none; border: none; color: #1a1a1a;
-            font-weight: bold;
-        }
-        .plin-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: flex-start;
-            padding: 30px 20px;
-        }
+        .plin-header-btn { cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: none; border: none; color: #1a1a1a; font-weight: bold; }
+        .plin-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 30px 20px; }
         .plin-option-btn {
-            width: 100%;
-            max-width: 320px;
-            padding: 12px 20px;
-            background: white;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            color: #333;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: border-color 0.2s, box-shadow 0.2s;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.06);
+            width: 100%; max-width: 320px; padding: 12px 20px; background: white;
+            border: 1.5px solid #e0e0e0; border-radius: 12px; font-size: 16px; font-weight: 600;
+            color: #333; cursor: pointer; display: flex; align-items: center; gap: 12px;
+            transition: border-color 0.2s, box-shadow 0.2s; box-shadow: 0 1px 5px rgba(0,0,0,0.06);
         }
-        .plin-option-btn:active {
-            border-color: #00cba9;
-            box-shadow: 0 4px 16px rgba(0,203,169,0.15);
-        }
-        .plin-logo {
-            width: 40px; height: 40px;
-            border-radius: 10px;
-            object-fit: contain;
-            background: #f5f5f5;
-        }
+        .plin-option-btn:active { border-color: #00cba9; box-shadow: 0 4px 16px rgba(0,203,169,0.15); }
 
-        /* ══ LOADING OVERLAY ══ */
+        /* ══ LOADING OVERLAY (dentro de yapear) ══ */
         #loadingOverlay {
-            position: fixed; inset: 0;
-            background: rgba(0, 0, 0, 0.55);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.55);
             display: flex; align-items: center; justify-content: center;
-            z-index: 500;
-            opacity: 0; visibility: hidden;
-            transition: opacity 0.25s ease, visibility 0.25s ease;
+            z-index: 500; opacity: 0; visibility: hidden; transition: opacity 0.25s ease, visibility 0.25s ease;
         }
         #loadingOverlay.active { opacity: 1; visibility: visible; }
-
         .loading-box {
-            background: white;
-            border-radius: 0;
-            width: clamp(180px, 72vw, 280px);
-            padding: 22px 28px;
-            display: flex; flex-direction: row;
-            align-items: center; justify-content: center;
-            gap: 18px;
+            background: white; border-radius: 0;
+            width: clamp(100px, 40vw, 160px);
+            padding: 22px 28px; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 0;
             box-shadow: 0 10px 40px rgba(0,0,0,0.25);
         }
-
         .loading-spinner {
-            width: 44px; height: 44px;
-            border: 4px solid #e8e8e8;
-            border-top-color: #03C7B1;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            width: 34px; height: 34px; border: 3.5px solid #e8e8e8;
+            border-top-color: #03C7B1; border-radius: 50%; animation: spin 0.8s linear infinite;
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        .loading-text {
-            font-size: 13px; color: #888; font-weight: 500; letter-spacing: 0.2px;
-        }
-
-        /* ══ PANTALLA COMPROBANTE ══ */
+        /* ══ PANTALLA COMPROBANTE (pantalla completa) ══ */
         #screen-receipt {
-            position: fixed; inset: 0;
-            background: #000;
-            display: none;
-            justify-content: center;
-            align-items: center;
-            z-index: 200;
-            width: 100vw;
-            height: 100vh;
-            height: 100dvh;
+            position: fixed; inset: 0; background: #000;
+            display: none; justify-content: center; align-items: center;
+            z-index: 200; width: 100vw; height: 100vh; height: 100dvh;
         }
         #screen-receipt.active { display: flex; }
-
         #receiptImage {
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
-            pointer-events: none;
+            width: 100%; height: 100%; object-fit: contain; pointer-events: none;
             -webkit-touch-callout: none;
             animation: receiptAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
-        @keyframes receiptAppear {
-            0%   { opacity: 0; transform: scale(0.1); }
-            100% { opacity: 1; transform: scale(1); }
-        }
+        @keyframes receiptAppear { 0% { opacity: 0; transform: scale(0.1); } 100% { opacity: 1; transform: scale(1); } }
 
+        /* Modal descarga */
         .download-confirm-overlay {
-            position: fixed; inset: 0;
-            background: rgba(0,0,0,0.65);
+            position: fixed; inset: 0; background: rgba(0,0,0,0.65);
             display: none; align-items: center; justify-content: center;
             z-index: 300; padding: 20px;
         }
         .download-confirm-overlay.active { display: flex; }
-        .download-confirm-modal {
-            background: white; border-radius: 20px;
-            padding: 28px 22px 22px; width: 100%; max-width: 310px;
-            text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.45);
-        }
+        .download-confirm-modal { background: white; border-radius: 20px; padding: 28px 22px 22px; width: 100%; max-width: 310px; text-align: center; box-shadow: 0 15px 50px rgba(0,0,0,0.45); }
         .download-confirm-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
         .download-confirm-subtitle { font-size: 14px; color: #666; line-height: 1.45; margin-bottom: 22px; }
         .download-confirm-buttons { display: flex; gap: 12px; }
-        .download-confirm-btn {
-            flex: 1; padding: 13px; border: none; border-radius: 12px;
-            font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.18s;
-        }
+        .download-confirm-btn { flex: 1; padding: 13px; border: none; border-radius: 12px; font-size: 16px; font-weight: 600; cursor: pointer; transition: transform 0.18s; }
         .download-confirm-cancel { background: #F0F0F3; color: #424242; }
         .download-confirm-accept { background: #790699; color: white; }
         .download-confirm-btn:active { transform: scale(0.97); }
+
+        /* ══ MODAL BORRAR HISTORIAL ══ */
+        .delete-history-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            display: none; align-items: center; justify-content: center;
+            z-index: 1100; padding: 20px;
+        }
+        .delete-history-overlay.active { display: flex; }
+        .delete-history-modal {
+            background: white; border-radius: 20px; padding: 28px 22px 22px;
+            width: 100%; max-width: 300px; text-align: center;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+        }
+        .delete-history-title { font-size: 17px; font-weight: 700; color: #1a1a1a; margin-bottom: 8px; }
+        .delete-history-subtitle { font-size: 14px; color: #666; line-height: 1.45; margin-bottom: 22px; }
+        .delete-history-buttons { display: flex; gap: 12px; }
+        .delete-history-btn { flex: 1; padding: 13px; border: none; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: transform 0.18s; }
+        .delete-history-cancel { background: #F0F0F3; color: #424242; }
+        .delete-history-confirm { background: #e05555; color: white; }
+        .delete-history-btn:active { transform: scale(0.97); }
+
+        @media (min-width: 481px) { .app-container { border-radius: 0; } }
     </style>
 </head>
 <body>
@@ -619,10 +537,18 @@
         </div>
     </div>
 
+    <!-- ══ LOADING OVERLAY INICIAL (sobre el menú que carga por partes) ══ -->
+    <div id="main-loading-overlay">
+        <div class="main-loading-box">
+            <div class="main-loading-spinner"></div>
+        </div>
+    </div>
+
     <!-- ══ PANTALLA PRINCIPAL ══ -->
     <div id="screen-main">
         <div class="app-container">
-            <div class="header">
+            <!-- Sección 1: Header -->
+            <div class="header main-section" id="sec-header">
                 <button class="header-btn">
                     <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
                 </button>
@@ -638,7 +564,8 @@
                 </button>
             </div>
 
-            <div class="services-grid">
+            <!-- Sección 2: Servicios -->
+            <div class="services-grid main-section" id="sec-services">
                 <div class="service-item">
                     <div class="service-icon"><img src="https://i.ibb.co/pr9mvKQf/Icono-recargar-celular.png" alt="Recargar celular"></div>
                     <span class="service-label">Recargar<br>celular</span>
@@ -690,7 +617,8 @@
                 </div>
             </div>
 
-            <div class="carousel-container">
+            <!-- Sección 3: Carrusel -->
+            <div class="carousel-container main-section" id="sec-carousel">
                 <div class="carousel" id="carousel">
                     <div class="carousel-track" id="carouselTrack">
                         <div class="carousel-card"><img src="https://i.ibb.co/LXKWw2bY/Yape-anuncio6.png" alt="Anuncio 1"></div>
@@ -711,18 +639,19 @@
                 </div>
             </div>
 
-            <div class="bottom-panel">
+            <!-- Sección 4: Panel inferior -->
+            <div class="bottom-panel main-section" id="sec-bottom">
                 <div class="balance-card">
                     <div class="balance-left" onclick="toggleBalanceVisibility()">
-                        <svg class="balance-icon" viewBox="0 0 24 24" id="eyeIcon">
-                            <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
-                        </svg>
+                        <!-- Icono ojo abierto (SVG inline) -->
+                        <div class="balance-icon" id="eyeIconWrapper">
+                            <img id="eyeIconImg" class="eye-svg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23742284'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/%3E%3C/svg%3E" alt="ojo">
+                        </div>
                         <span class="balance-label" id="balanceLabel">Mostrar saldo</span>
                     </div>
                     <div class="balance-value hidden" id="balanceValue" onclick="openEditSaldoModal(event)">S/ 0.00</div>
                 </div>
 
-                <!-- Movimientos toggle -->
                 <div class="movements-row" id="movementsToggle">
                     <div class="movements-left">
                         <div class="movements-icon">
@@ -737,16 +666,13 @@
                     </div>
                 </div>
 
-                <!-- Lista de movimientos (colapsada por defecto) -->
                 <div class="movements-list" id="movementsList"></div>
-
-                <!-- Spacer -->
                 <div id="movementsSpacer"></div>
             </div>
         </div>
     </div>
 
-    <!-- ══ BOTONES FIJOS (siempre visibles en pantalla principal) ══ -->
+    <!-- ══ BOTONES FIJOS ══ -->
     <div class="action-buttons-fixed" id="actionButtonsFixed">
         <button class="action-btn btn-scan">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -775,11 +701,10 @@
         </div>
     </div>
 
-    <!-- ══ LOADING OVERLAY ══ -->
+    <!-- ══ LOADING OVERLAY (yapear) ══ -->
     <div id="loadingOverlay">
         <div class="loading-box">
             <div class="loading-spinner"></div>
-            <span class="loading-text">Cargando...</span>
         </div>
     </div>
 
@@ -791,11 +716,9 @@
                 <div>Yapear a</div>
                 <button class="yapear-icon-btn" id="btnClose">&times;</button>
             </div>
-
             <div class="recipient-section">
                 <input type="text" class="recipient-name" id="recipientName" placeholder="Nombre">
             </div>
-
             <div class="amount-section">
                 <div class="amount-wrapper">
                     <span class="currency-symbol" id="currencySymbol">S/</span>
@@ -803,11 +726,9 @@
                 </div>
                 <div class="error-message" id="errorMessage">El monto ingresado no es válido</div>
             </div>
-
             <div class="input-section">
                 <input type="tel" class="number-input" id="phoneInput" placeholder="Agregar número" maxlength="3">
             </div>
-
             <div class="yapear-footer">
                 <button class="yapear-btn yapear-btn-secondary" id="btnOtrosBancos">Otros bancos</button>
                 <button class="yapear-btn yapear-btn-primary" id="btnConfirmYapear">Yapear</button>
@@ -825,7 +746,6 @@
             </div>
             <div class="plin-content">
                 <button class="plin-option-btn" id="btnPlinOption">
-                    <!-- Logo Plin en SVG simple con colores de marca -->
                     <svg width="40" height="40" viewBox="0 0 40 40" style="border-radius:10px;flex-shrink:0;">
                         <rect width="40" height="40" rx="10" fill="#00B4D8"/>
                         <text x="20" y="27" font-family="Arial" font-size="16" font-weight="bold" fill="white" text-anchor="middle">P</text>
@@ -836,7 +756,7 @@
         </div>
     </div>
 
-    <!-- ══ PANTALLA COMPROBANTE ══ -->
+    <!-- ══ PANTALLA COMPROBANTE (pantalla completa) ══ -->
     <div id="screen-receipt">
         <img id="receiptImage" alt="Comprobante" />
     </div>
@@ -853,31 +773,113 @@
         </div>
     </div>
 
-    <script>
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        });
+    <!-- Modal borrar historial -->
+    <div class="delete-history-overlay" id="deleteHistoryModal">
+        <div class="delete-history-modal">
+            <div class="delete-history-title">Borrar historial</div>
+            <div class="delete-history-subtitle">¿Deseas borrar este historial de Yapeo?</div>
+            <div class="delete-history-buttons">
+                <button class="delete-history-btn delete-history-cancel" onclick="closeDeleteHistory()">Cancelar</button>
+                <button class="delete-history-btn delete-history-confirm" onclick="confirmDeleteHistory()">Borrar</button>
+            </div>
+        </div>
+    </div>
 
-        // ══ SPLASH ══
-        const splashOverlay = document.getElementById('splash-overlay');
-        const splashInner   = document.getElementById('splash-inner');
+    <script>
+        document.addEventListener('contextmenu', e => { e.preventDefault(); return false; });
+
+        // ══ PERSISTENCIA localStorage ══
+        function saveData() {
+            try {
+                localStorage.setItem('yape_balance', document.getElementById('balanceValue').textContent);
+                localStorage.setItem('yape_history', JSON.stringify(yapeHistory));
+            } catch(e) {}
+        }
+
+        function loadData() {
+            try {
+                const bv = document.getElementById('balanceValue');
+                const bal = localStorage.getItem('yape_balance');
+                // Si hay balance guardado úsalo, si no asegura el formato correcto
+                if (bal && bal.trim() !== '') {
+                    bv.textContent = bal;
+                } else {
+                    bv.textContent = 'S/ 0.00';
+                }
+                const hist = localStorage.getItem('yape_history');
+                if (hist) {
+                    const parsed = JSON.parse(hist);
+                    yapeHistory.push(...parsed);
+                }
+            } catch(e) {
+                document.getElementById('balanceValue').textContent = 'S/ 0.00';
+            }
+        }
+
+        // ══ SPLASH + CARGA POR PARTES ══
+        const splashOverlay   = document.getElementById('splash-overlay');
+        const splashInner     = document.getElementById('splash-inner');
+        const mainLoadingOvl  = document.getElementById('main-loading-overlay');
+
+        const sections = [
+            document.getElementById('sec-header'),
+            document.getElementById('sec-services'),
+            document.getElementById('sec-carousel'),
+            document.getElementById('sec-bottom')
+        ];
+
+        function loadSectionsSequentially(callback) {
+            // Ocultar botones fijos hasta que todo cargue
+            document.getElementById('actionButtonsFixed').style.display = 'none';
+            // Mostrar el overlay de carga sobre el menú
+            mainLoadingOvl.classList.add('active');
+
+            let i = 0;
+            // Carga total en ~1 segundo: 4 secciones × ~250ms
+            const timesPool = [200, 250, 300];
+            function nextSection() {
+                if (i >= sections.length) {
+                    // Todo cargado: ocultar overlay y mostrar botones
+                    mainLoadingOvl.classList.remove('active');
+                    setTimeout(() => {
+                        mainLoadingOvl.classList.add('gone');
+                        document.getElementById('actionButtonsFixed').style.display = 'flex';
+                    }, 300);
+                    if (callback) callback();
+                    return;
+                }
+                sections[i].classList.add('loaded');
+                i++;
+                const delay = timesPool[Math.floor(Math.random() * timesPool.length)];
+                setTimeout(nextSection, delay);
+            }
+            nextSection();
+        }
 
         window.addEventListener('load', () => {
+            loadData();
             setTimeout(() => splashInner.classList.add('visible'), 50);
             setTimeout(() => {
                 splashOverlay.classList.add('hiding');
                 splashOverlay.addEventListener('transitionend', () => {
                     splashOverlay.classList.add('gone');
+                    // Iniciar carga por partes del menú
+                    loadSectionsSequentially(null);
                 }, { once: true });
             }, 3000);
         });
 
-        // ══ ESTADO: modo Plin activo ══
-        let plinMode = false; // true = se generará baucher con "Plin"
-
-        // ══ HISTORIAL DE YAPEOS ══
+        // ══ ESTADO ══
+        let plinMode = false;
         const yapeHistory = [];
+        let deleteHistoryIndex = null;
+
+        function formatAmount(rawAmount) {
+            // Asegurar siempre 2 decimales: "10" → "10.00", "10.50" → "10.50"
+            const num = parseFloat(rawAmount);
+            if (isNaN(num)) return rawAmount;
+            return num.toFixed(2);
+        }
 
         function formatDateTimeNow() {
             const now = new Date();
@@ -886,12 +888,21 @@
             const date = `${day} ${months[now.getMonth()]} ${now.getFullYear()}`;
             let hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
-            const ampm = hours >= 12 ? 'p. m.' : 'a. m.';
+            const isPM = hours >= 12;
             hours = hours % 12 || 12;
-            const time = `${hours.toString().padStart(2, '0')}:${minutes} ${ampm}`;
-            return { date, time };
+            const hh = hours.toString().padStart(2, '0');
+            // Para el historial: sin puntos (pm/am)
+            const timeShort = `${hh}:${minutes} ${isPM ? 'pm' : 'am'}`;
+            // Para el baucher: con puntos (p. m./a. m.)
+            const timeLong  = `${hh}:${minutes} ${isPM ? 'p. m.' : 'a. m.'}`;
+            return { date, time: timeShort, timeBaucher: timeLong };
         }
 
+        function escapeHtml(str) {
+            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ══ RENDER MOVIMIENTOS ══
         function renderMovements() {
             const list = document.getElementById('movementsList');
             if (yapeHistory.length === 0) {
@@ -901,12 +912,14 @@
             list.innerHTML = yapeHistory.slice().reverse().map((entry, i) => {
                 const realIndex = yapeHistory.length - 1 - i;
                 return `
-                <div class="movement-item" onclick="viewHistoryReceipt(${realIndex})">
+                <div class="movement-item"
+                    onclick="viewHistoryReceipt(${realIndex})"
+                    data-index="${realIndex}">
                     <div class="movement-info">
                         <div class="movement-name">${escapeHtml(entry.name)}</div>
                         <div class="movement-datetime">${entry.date} - ${entry.time}</div>
                     </div>
-                    <div class="movement-amount">- S/ ${entry.amount}</div>
+                    <div class="movement-amount">-S/ ${entry.displayAmount}</div>
                     <div class="movement-chevron">
                         <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5">
                             <polyline points="9 6 15 12 9 18"/>
@@ -914,10 +927,36 @@
                     </div>
                 </div>`;
             }).join('');
-        }
 
-        function escapeHtml(str) {
-            return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            // Agregar long-press a cada item
+            list.querySelectorAll('.movement-item').forEach(item => {
+                let pressTimer;
+                let pressTriggered = false;
+
+                item.addEventListener('touchstart', () => {
+                    pressTriggered = false;
+                    pressTimer = setTimeout(() => {
+                        pressTriggered = true;
+                        const idx = parseInt(item.getAttribute('data-index'));
+                        openDeleteHistory(idx);
+                    }, 600);
+                }, { passive: true });
+
+                item.addEventListener('touchend', () => { clearTimeout(pressTimer); }, { passive: true });
+                item.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
+
+                // Mouse (escritorio)
+                item.addEventListener('mousedown', () => {
+                    pressTriggered = false;
+                    pressTimer = setTimeout(() => {
+                        pressTriggered = true;
+                        const idx = parseInt(item.getAttribute('data-index'));
+                        openDeleteHistory(idx);
+                    }, 600);
+                });
+                item.addEventListener('mouseup', () => { clearTimeout(pressTimer); });
+                item.addEventListener('mouseleave', () => { clearTimeout(pressTimer); });
+            });
         }
 
         function viewHistoryReceipt(index) {
@@ -932,37 +971,69 @@
             img.style.animation = '';
         }
 
+        // ══ BORRAR HISTORIAL ══
+        function openDeleteHistory(index) {
+            deleteHistoryIndex = index;
+            document.getElementById('deleteHistoryModal').classList.add('active');
+        }
+        function closeDeleteHistory() {
+            deleteHistoryIndex = null;
+            document.getElementById('deleteHistoryModal').classList.remove('active');
+        }
+        function confirmDeleteHistory() {
+            if (deleteHistoryIndex !== null) {
+                yapeHistory.splice(deleteHistoryIndex, 1);
+                saveData();
+                renderMovements();
+            }
+            closeDeleteHistory();
+        }
+        document.getElementById('deleteHistoryModal').addEventListener('click', function(e) {
+            if (e.target === this) closeDeleteHistory();
+        });
+
         // ══ NAVEGACIÓN ══
-        const screenMain    = document.getElementById('screen-main');
-        const screenYapear  = document.getElementById('screen-yapear');
-        const screenPlin    = document.getElementById('screen-plin');
-        const screenReceipt = document.getElementById('screen-receipt');
+        const screenMain     = document.getElementById('screen-main');
+        const screenYapear   = document.getElementById('screen-yapear');
+        const screenPlin     = document.getElementById('screen-plin');
+        const screenReceipt  = document.getElementById('screen-receipt');
         const actionBtnsFixed = document.getElementById('actionButtonsFixed');
 
+        // Icono ojito tachado: imagen de la URL proporcionada
+        const EYE_OPEN_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23742284'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/%3E%3C/svg%3E";
+        const EYE_CLOSED_URL = "https://i.ibb.co/6cVnr7HK/Ojito-Tachado-Yape.png";
+
+        function setEyeIcon(open) {
+            const img = document.getElementById('eyeIconImg');
+            if (open) {
+                img.src = EYE_OPEN_SVG;
+                img.className = 'eye-svg'; /* ojito SVG = más pequeño */
+            } else {
+                img.src = EYE_CLOSED_URL;
+                img.className = 'eye-img'; /* ojito link = más grande */
+            }
+        }
+
         function openYapear() {
-            // Reset plin mode al abrir
             plinMode = false;
             document.getElementById('btnOtrosBancos').classList.remove('active-otros');
 
             // Ocultar saldo
             const bv = document.getElementById('balanceValue');
             const bl = document.getElementById('balanceLabel');
-            const ei = document.getElementById('eyeIcon');
             bv.classList.add('hidden');
             bl.textContent = 'Mostrar saldo';
-            ei.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+            setEyeIcon(true);
 
-            // Ocultar movimientos si están abiertos
             if (movementsOpen) {
                 movementsOpen = false;
                 const list   = document.getElementById('movementsList');
                 const arrow  = document.getElementById('movementsArrow');
                 const toggle = document.getElementById('movementsToggle');
-                const spacer = document.getElementById('movementsSpacer');
                 list.classList.remove('open');
                 arrow.classList.remove('open');
                 toggle.classList.remove('expanded');
-                spacer.style.display = '';
+                document.getElementById('movementsSpacer').style.display = '';
             }
 
             screenMain.classList.add('slide-out');
@@ -994,7 +1065,6 @@
         document.getElementById('btnClose').addEventListener('click', closeYapear);
 
         // ══ BOTÓN OTROS BANCOS ══
-        // Se activa cuando hay un monto válido
         const amountInputEl = document.getElementById('amountInput');
         const btnOtrosBancos = document.getElementById('btnOtrosBancos');
 
@@ -1009,29 +1079,14 @@
         }
 
         btnOtrosBancos.addEventListener('click', () => {
-            // Solo funcionar si está activo
             if (!btnOtrosBancos.classList.contains('active-otros')) return;
-            // Mostrar pantalla Plin (pantalla blanca)
             screenPlin.classList.add('active');
         });
 
         // ══ PANTALLA PLIN ══
-        document.getElementById('btnPlinBack').addEventListener('click', () => {
-            screenPlin.classList.remove('active');
-            // Volver al formulario con los datos guardados
-        });
-
-        document.getElementById('btnPlinClose').addEventListener('click', () => {
-            screenPlin.classList.remove('active');
-            closeYapear();
-        });
-
-        document.getElementById('btnPlinOption').addEventListener('click', () => {
-            // Seleccionar Plin, volver al formulario
-            plinMode = true;
-            screenPlin.classList.remove('active');
-            // Los datos del formulario se mantienen
-        });
+        document.getElementById('btnPlinBack').addEventListener('click', () => { screenPlin.classList.remove('active'); });
+        document.getElementById('btnPlinClose').addEventListener('click', () => { screenPlin.classList.remove('active'); closeYapear(); });
+        document.getElementById('btnPlinOption').addEventListener('click', () => { plinMode = true; screenPlin.classList.remove('active'); });
 
         // ══ CARRUSEL ══
         const carouselEl      = document.getElementById('carousel');
@@ -1076,44 +1131,38 @@
             });
         }
 
-        function startAutoSlide() {
-            clearInterval(autoSlideInterval);
-            autoSlideInterval = setInterval(() => goTo(currentSlide + 1), SLIDE_DURATION);
-        }
+        function startAutoSlide() { clearInterval(autoSlideInterval); autoSlideInterval = setInterval(() => goTo(currentSlide + 1), SLIDE_DURATION); }
         function resetAutoSlide() { clearInterval(autoSlideInterval); startAutoSlide(); }
 
-        carouselEl.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
-            isDragging = true; clearInterval(autoSlideInterval);
-        }, { passive: true });
-
+        carouselEl.addEventListener('touchstart', (e) => { touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY; isDragging = true; clearInterval(autoSlideInterval); }, { passive: true });
         carouselEl.addEventListener('touchend', (e) => {
-            if (!isDragging) return;
-            isDragging = false;
+            if (!isDragging) return; isDragging = false;
             const dx = e.changedTouches[0].clientX - touchStartX;
             const dy = e.changedTouches[0].clientY - touchStartY;
-            if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) {
-                goTo(dx < 0 ? currentSlide + 1 : currentSlide - 1);
-            }
+            if (Math.abs(dx) > SWIPE_THRESHOLD && Math.abs(dx) > Math.abs(dy)) goTo(dx < 0 ? currentSlide + 1 : currentSlide - 1);
             resetAutoSlide();
         }, { passive: true });
-
         carouselEl.addEventListener('touchcancel', () => { isDragging = false; resetAutoSlide(); }, { passive: true });
 
         goTo(0, false);
         startAutoSlide();
 
         // ══ BALANCE ══
+        let balanceVisible = false;
+
         function toggleBalanceVisibility() {
             const bv = document.getElementById('balanceValue');
             const bl = document.getElementById('balanceLabel');
-            const ei = document.getElementById('eyeIcon');
             if (bv.classList.contains('hidden')) {
-                bv.classList.remove('hidden'); bl.textContent = 'Ocultar saldo';
-                ei.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/><line x1="4" y1="4" x2="20" y2="20" stroke="white" stroke-width="2.5" stroke-linecap="round"/>';
+                bv.classList.remove('hidden');
+                bl.textContent = 'Ocultar saldo';
+                setEyeIcon(false); // ojo tachado cuando muestra saldo
+                balanceVisible = true;
             } else {
-                bv.classList.add('hidden'); bl.textContent = 'Mostrar saldo';
-                ei.innerHTML = '<path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>';
+                bv.classList.add('hidden');
+                bl.textContent = 'Mostrar saldo';
+                setEyeIcon(true); // ojo abierto cuando oculta saldo
+                balanceVisible = false;
             }
         }
 
@@ -1133,10 +1182,9 @@
             if (isNaN(v) || v < 0) v = 0;
             bv.textContent = `S/ ${v.toLocaleString('es-PE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             closeEditSaldoModal();
+            saveData();
         }
-        document.getElementById('editSaldoModal').addEventListener('click', (e) => {
-            if (e.target.id === 'editSaldoModal') closeEditSaldoModal();
-        });
+        document.getElementById('editSaldoModal').addEventListener('click', (e) => { if (e.target.id === 'editSaldoModal') closeEditSaldoModal(); });
 
         // ══ MOVIMIENTOS TOGGLE ══
         let movementsOpen = false;
@@ -1160,7 +1208,6 @@
                 toggle.classList.remove('expanded');
                 spacer.style.display = '';
                 screenMain.classList.remove('scrollable');
-                // Volver al tope
                 screenMain.scrollTop = 0;
             }
         });
@@ -1185,16 +1232,16 @@
             '5': { posX: -280, posY: 5, fontSize: 30, scale: 0.8 },
             '6': { posX: -300, posY: 5, fontSize: 30, scale: 0.8 }
         };
-        const soloPuntoConfig  = { posX: -160, posY: 5, fontSize: 30, scale: 1 };
-        const soloPunto_1      = { posX: -220, posY: 5, fontSize: 30, scale: 1 };
-        const soloPunto_2      = { posX: -280, posY: 5, fontSize: 30, scale: 1 };
-        const soloPunto_3      = { posX: -290, posY: 5, fontSize: 30, scale: 0.9 };
-        const conDecimal_1_1   = { posX: -270, posY: 5, fontSize: 30, scale: 1 };
-        const conDecimal_1_2   = { posX: -300, posY: 5, fontSize: 30, scale: 1 };
-        const conDecimal_2_1   = { posX: -300, posY: 5, fontSize: 30, scale: 1 };
-        const conDecimal_2_2   = { posX: -328, posY: 5, fontSize: 30, scale: 1 };
-        const conDecimal_3_1   = { posX: -328, posY: 5, fontSize: 30, scale: 0.9 };
-        const conDecimal_3_2   = { posX: -333, posY: 5, fontSize: 30, scale: 0.9 };
+        const soloPuntoConfig = { posX: -160, posY: 5, fontSize: 30, scale: 1 };
+        const soloPunto_1     = { posX: -220, posY: 5, fontSize: 30, scale: 1 };
+        const soloPunto_2     = { posX: -280, posY: 5, fontSize: 30, scale: 1 };
+        const soloPunto_3     = { posX: -290, posY: 5, fontSize: 30, scale: 0.9 };
+        const conDecimal_1_1  = { posX: -270, posY: 5, fontSize: 30, scale: 1 };
+        const conDecimal_1_2  = { posX: -300, posY: 5, fontSize: 30, scale: 1 };
+        const conDecimal_2_1  = { posX: -300, posY: 5, fontSize: 30, scale: 1 };
+        const conDecimal_2_2  = { posX: -328, posY: 5, fontSize: 30, scale: 1 };
+        const conDecimal_3_1  = { posX: -328, posY: 5, fontSize: 30, scale: 0.9 };
+        const conDecimal_3_2  = { posX: -333, posY: 5, fontSize: 30, scale: 0.9 };
 
         function sanitizeInput(value) {
             value = value.replace(/[^0-9.]/g, '');
@@ -1262,7 +1309,6 @@
                 this.style.fontSize = getFontSize(value.replace(/\./g, '').length);
             }
             this.value = value;
-            // Verificar estado del botón Otros bancos
             checkOtrosBancosState();
         });
 
@@ -1318,14 +1364,16 @@
         let highResDataURL = null;
 
         function generateReceipt(name, amount, phone) {
+            const displayAmount = amount; // exactamente como lo puso el usuario (para baucher)
+            const historyAmount = parseFloat(amount) % 1 === 0
+                ? parseFloat(amount).toFixed(2)
+                : amount; // historial: enteros con .00, decimales tal cual
             const formattedPhone = `*** *** ${phone.padStart(3, '0')}`;
-            const { date: formattedDate, time: formattedTime } = formatDateTimeNow();
+            const { date: formattedDate, time: formattedTime, timeBaucher } = formatDateTimeNow();
             const rand1 = Math.floor(Math.random() * 10);
             const rand2 = Math.floor(Math.random() * 10);
             const rand3 = Math.floor(Math.random() * 10);
             const operationCode = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
-
-            // Texto destino: "Yape" o "Plin" según el modo
             const destinoText = plinMode ? 'Plin' : 'Yape';
 
             const baseImage = new Image();
@@ -1337,15 +1385,15 @@
                 offCanvas.width  = baseImage.naturalWidth;
                 offCanvas.height = baseImage.naturalHeight;
                 const ctx = offCanvas.getContext('2d');
-
                 ctx.drawImage(baseImage, 0, 0, offCanvas.width, offCanvas.height);
 
                 const cfg = RECEIPT_CONFIG;
                 const fontFam = cfg.fontFamily;
 
+                // Monto con 2 decimales en el baucher
                 ctx.font = `${cfg.amount.font} ${cfg.amount.fontSize}px ${fontFam}`;
                 ctx.fillStyle = cfg.amount.color;
-                ctx.fillText(amount, cfg.amount.x, cfg.amount.y);
+                ctx.fillText(displayAmount, cfg.amount.x, cfg.amount.y);
 
                 ctx.font = `${cfg.name.font} ${cfg.name.fontSize}px ${fontFam}`;
                 ctx.fillStyle = cfg.name.color;
@@ -1357,7 +1405,7 @@
 
                 ctx.font = `${cfg.time.font} ${cfg.time.fontSize}px ${fontFam}`;
                 ctx.fillStyle = cfg.time.color;
-                ctx.fillText(formattedTime, cfg.time.x, cfg.time.y);
+                ctx.fillText(timeBaucher, cfg.time.x, cfg.time.y);
 
                 ctx.font = `${cfg.random1.font} ${cfg.random1.fontSize}px ${fontFam}`;
                 ctx.fillStyle = cfg.random1.color;
@@ -1369,7 +1417,6 @@
                 ctx.fillStyle = cfg.phone.color;
                 ctx.fillText(formattedPhone, cfg.phone.x, cfg.phone.y);
 
-                // Destino: Yape o Plin
                 ctx.font = `${cfg.yapeText.font} ${cfg.yapeText.fontSize}px ${fontFam}`;
                 ctx.fillStyle = cfg.yapeText.color;
                 ctx.fillText(destinoText, cfg.yapeText.x, cfg.yapeText.y);
@@ -1390,14 +1437,9 @@
                 const dataURL = scaledCanvas.toDataURL('image/jpeg', 0.72);
                 highResDataURL = dataURL;
 
-                // Guardar en historial
-                yapeHistory.push({
-                    name,
-                    amount,
-                    date: formattedDate,
-                    time: formattedTime,
-                    dataURL
-                });
+                // Guardar en historial: monto con .00 si es entero, hora sin puntos
+                yapeHistory.push({ name, amount, displayAmount: historyAmount, date: formattedDate, time: formattedTime, dataURL });
+                saveData();
 
                 if (movementsOpen) renderMovements();
 
@@ -1423,47 +1465,31 @@
             void img.offsetWidth;
             img.style.animation = '';
 
-            // Limpiar formulario y resetear plinMode
             resetYapearForm();
             plinMode = false;
-
-            // Mostrar botones fijos de nuevo (en pantalla principal)
             screenMain.classList.remove('slide-out');
             actionBtnsFixed.style.display = 'flex';
         }
 
-        function hideReceiptScreen() {
-            screenReceipt.classList.remove('active');
-        }
+        function hideReceiptScreen() { screenReceipt.classList.remove('active'); }
 
-        // ══ INTERACCIONES EN EL COMPROBANTE ══
+        // ══ INTERACCIONES COMPROBANTE ══
         let longPressTimer, longPressTriggered = false;
 
         screenReceipt.addEventListener('touchstart', function () {
             longPressTriggered = false;
-            longPressTimer = setTimeout(() => {
-                longPressTriggered = true;
-                openDownloadConfirm();
-            }, 600);
+            longPressTimer = setTimeout(() => { longPressTriggered = true; openDownloadConfirm(); }, 600);
         });
         screenReceipt.addEventListener('touchend', function () {
             clearTimeout(longPressTimer);
             if (!longPressTriggered) hideReceiptScreen();
         });
-        screenReceipt.addEventListener('touchmove', function () {
-            clearTimeout(longPressTimer);
-        });
-        screenReceipt.addEventListener('click', function () {
-            if (!longPressTriggered) hideReceiptScreen();
-        });
+        screenReceipt.addEventListener('touchmove', function () { clearTimeout(longPressTimer); });
+        screenReceipt.addEventListener('click', function () { if (!longPressTriggered) hideReceiptScreen(); });
 
         // ══ DESCARGA ══
-        function openDownloadConfirm() {
-            document.getElementById('downloadConfirmModal').classList.add('active');
-        }
-        function closeDownloadConfirm() {
-            document.getElementById('downloadConfirmModal').classList.remove('active');
-        }
+        function openDownloadConfirm() { document.getElementById('downloadConfirmModal').classList.add('active'); }
+        function closeDownloadConfirm() { document.getElementById('downloadConfirmModal').classList.remove('active'); }
         function confirmDownload() {
             closeDownloadConfirm();
             if (!highResDataURL) return;
@@ -1474,10 +1500,7 @@
             link.click();
             document.body.removeChild(link);
         }
-
-        document.getElementById('downloadConfirmModal').addEventListener('click', function (e) {
-            if (e.target === this) closeDownloadConfirm();
-        });
+        document.getElementById('downloadConfirmModal').addEventListener('click', function (e) { if (e.target === this) closeDownloadConfirm(); });
 
         applySymbolConfig(symbolConfigEnteros['0']);
     </script>
