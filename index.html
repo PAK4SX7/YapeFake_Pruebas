@@ -816,17 +816,30 @@
             nextSection();
         }
 
-        window.addEventListener('load', () => {
+        function startApp() {
             loadData();
             setTimeout(() => splashInner.classList.add('visible'), 50);
             setTimeout(() => {
                 splashOverlay.classList.add('hiding');
-                splashOverlay.addEventListener('transitionend', () => {
+                // Fallback: si transitionend no dispara (imagen no cargó), forzar después de 600ms
+                let transitioned = false;
+                function doTransition() {
+                    if (transitioned) return;
+                    transitioned = true;
                     splashOverlay.classList.add('gone');
                     loadSectionsSequentially(null);
-                }, { once: true });
-            }, 3000);
-        });
+                }
+                splashOverlay.addEventListener('transitionend', doTransition, { once: true });
+                setTimeout(doTransition, 600);
+            }, 2800);
+        }
+
+        // Arrancar con DOMContentLoaded para no esperar imágenes externas
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', startApp);
+        } else {
+            startApp();
+        }
 
         // ══ ESTADO ══
         let plinMode = false;
@@ -1311,22 +1324,26 @@
         // ══ CARGA DE FUENTE ROBOTO PARA EL CANVAS ══
         // Forzamos que Roboto esté disponible en el canvas antes de dibujar
         // Carga Roboto directamente desde Google Fonts como ArrayBuffer y lo registra con FontFace
-        // Esto garantiza que el canvas la use en CUALQUIER dispositivo aunque no esté instalada
+        // Si falla (sin red, bloqueado) simplemente continúa con la fuente del sistema
         let _robotoLoaded = null;
         function ensureRobotoLoaded() {
             if (_robotoLoaded) return _robotoLoaded;
             const ROBOTO_REGULAR = 'https://fonts.gstatic.com/s/roboto/v32/KFOmCnqEu92Fr1Mu4mxK.woff2';
             const ROBOTO_BOLD    = 'https://fonts.gstatic.com/s/roboto/v32/KFOlCnqEu92Fr1MmWUlfBBc4.woff2';
 
+            function loadFont(url, weight) {
+                return fetch(url)
+                    .then(r => r.arrayBuffer())
+                    .then(buf => {
+                        const f = new FontFace('RobotoCanvas', buf, { weight });
+                        return f.load().then(loaded => { document.fonts.add(loaded); });
+                    })
+                    .catch(() => { /* fallo silencioso, usará fuente del sistema */ });
+            }
+
             _robotoLoaded = Promise.all([
-                fetch(ROBOTO_REGULAR).then(r => r.arrayBuffer()).then(buf => {
-                    const f = new FontFace('RobotoCanvas', buf, { weight: '400' });
-                    return f.load().then(loaded => { document.fonts.add(loaded); });
-                }),
-                fetch(ROBOTO_BOLD).then(r => r.arrayBuffer()).then(buf => {
-                    const f = new FontFace('RobotoCanvas', buf, { weight: '700' });
-                    return f.load().then(loaded => { document.fonts.add(loaded); });
-                })
+                loadFont(ROBOTO_REGULAR, '400'),
+                loadFont(ROBOTO_BOLD, '700')
             ]);
             return _robotoLoaded;
         }
@@ -1346,17 +1363,29 @@
 
             const IMG_URL = 'https://i.ibb.co/TB01kNdx/YAPE-BAUCHER-v5.jpg';
 
-            // Cargamos la imagen vía fetch→blob para evitar problemas CORS en cualquier dispositivo
-            ensureRobotoLoaded().then(() => {
-                return fetch(IMG_URL).then(r => r.blob()).then(blob => {
-                    return new Promise((resolve, reject) => {
+            // Cargamos la imagen vía fetch→blob; si falla, fallback a crossOrigin directo
+            function loadImageAsDataUri(url) {
+                return fetch(url)
+                    .then(r => r.blob())
+                    .then(blob => new Promise((resolve, reject) => {
                         const reader = new FileReader();
                         reader.onload = () => resolve(reader.result);
                         reader.onerror = reject;
                         reader.readAsDataURL(blob);
+                    }))
+                    .catch(() => {
+                        // Fallback: intentar cargar directamente como imagen crossOrigin
+                        return new Promise((resolve, reject) => {
+                            const img = new Image();
+                            img.crossOrigin = 'Anonymous';
+                            img.onload = () => resolve(url);
+                            img.onerror = reject;
+                            img.src = url + '?t=' + Date.now();
+                        });
                     });
-                });
-            }).then(dataUri => {
+            }
+
+            ensureRobotoLoaded().then(() => loadImageAsDataUri(IMG_URL)).then(dataUri => {
                 const baseImage = new Image();
                 baseImage.onload = function () {
                     // ── Canvas de alta resolución ──
