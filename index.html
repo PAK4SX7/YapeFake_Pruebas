@@ -62,7 +62,7 @@
         #splash-inner.visible { opacity: 1; transform: scale(1) translateY(0); }
         #splash-inner img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* ══ LOADING SCREEN (nuevo: sobre el menú que carga por partes) ══ */
+        /* ══ LOADING SCREEN ══ */
         #main-loading-overlay {
             position: fixed; inset: 0; z-index: 8000;
             background: rgba(0,0,0,0.45);
@@ -74,7 +74,7 @@
         #main-loading-overlay.gone   { display: none; }
 
         .main-loading-box {
-            width: 200px; height: 70px; /* ← ANCHO y ALTO de la ventana de carga */
+            width: 200px; height: 70px;
             background: white;
             border-radius: 0;
             display: flex; align-items: center; justify-content: center;
@@ -107,7 +107,6 @@
             padding-bottom: 0;
         }
 
-        /* Elementos del menú con opacidad inicial 0 para la animación de carga por partes */
         .main-section { opacity: 0; transition: opacity 0.4s ease; }
         .main-section.loaded { opacity: 1; }
 
@@ -214,52 +213,17 @@
         }
         .balance-left { display: flex; align-items: center; gap: 3vw; cursor: pointer; }
 
-.balance-icon { 
-    width: 8.5vw; 
-    height: 8.5vw; 
-    max-width: 40px; 
-    max-height: 40px; 
-    min-width: 30px; 
-    min-height: 30px; 
-} /* ← Contenedor del ojito */
+        .balance-icon {
+            width: 8.5vw; height: 8.5vw; max-width: 40px; max-height: 40px;
+            min-width: 30px; min-height: 30px;
+        }
+        .balance-icon img { width: 100%; height: 100%; object-fit: contain; }
+        .balance-icon img.eye-svg  { width: 72%; height: 71%; transform: translate(4px, 4px); }
+        .balance-icon img.eye-img  { width: 100%; height: 90%; }
 
-.balance-icon img { 
-    width: 100%; 
-    height: 100%; 
-    object-fit: contain; 
-}
-
-/* Ojito SVG inline (ojo abierto) — más pequeño + movido */
-.balance-icon img.eye-svg  { 
-    width: 72%; 
-    height: 71%;
-    transform: translate(4px, 4px); /* ← derecha, abajo */
-}
-
-/* Ojito imagen del link (ojo tachado) — más grande */
-.balance-icon img.eye-img  { 
-    width: 100%; 
-    height: 90%; 
-}
-
-.balance-label { 
-    font-size: clamp(14px, 4vw, 18px); 
-    font-weight: 500; 
-    color: var(--yape-purple); 
-}
-
-.balance-value { 
-    font-size: clamp(14px, 4vw, 18px); 
-    font-weight: 600; 
-    color: #1a1a1a; 
-    cursor: pointer; 
-    transition: opacity 0.2s; 
-}
-
-.balance-value.hidden { 
-    visibility: hidden; 
-    opacity: 0; 
-}
+        .balance-label { font-size: clamp(14px, 4vw, 18px); font-weight: 500; color: var(--yape-purple); }
+        .balance-value { font-size: clamp(14px, 4vw, 18px); font-weight: 600; color: #1a1a1a; cursor: pointer; transition: opacity 0.2s; }
+        .balance-value.hidden { visibility: hidden; opacity: 0; }
 
         /* ══ MOVIMIENTOS ══ */
         .movements-row {
@@ -290,25 +254,18 @@
         .movements-list.open { max-height: 400px; overflow-y: auto; }
         .movements-list.closed { margin-bottom: 0; }
 
-        .movements-empty {
-            padding: 5vw 4vw; text-align: center;
-            color: #aaa; font-size: clamp(13px, 3.5vw, 15px);
-        }
+        .movements-empty { padding: 5vw 4vw; text-align: center; color: #aaa; font-size: clamp(13px, 3.5vw, 15px); }
 
         .movement-item {
             display: flex; align-items: center; justify-content: space-between;
             padding: 3.5vw 4vw; border-bottom: 1px solid #f3f3f3;
-            cursor: pointer; transition: background 0.15s;
-            gap: 2vw;
+            cursor: pointer; transition: background 0.15s; gap: 2vw;
         }
         .movement-item:last-child { border-bottom: none; }
         .movement-item:active { background: #f9f5ff; }
 
         .movement-info { flex: 1; min-width: 0; }
-        .movement-name {
-            font-size: clamp(13px, 3.8vw, 16px); font-weight: 600;
-            color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-        }
+        .movement-name { font-size: clamp(13px, 3.8vw, 16px); font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .movement-datetime { font-size: clamp(11px, 3vw, 13px); color: #999; margin-top: 1px; }
         .movement-amount { font-size: clamp(14px, 4vw, 17px); font-weight: 700; color: #e05555; white-space: nowrap; flex-shrink: 0; }
         .movement-chevron { flex-shrink: 0; }
@@ -319,7 +276,7 @@
 
         /* ══ BOTONES FIJOS ══ */
         .action-buttons-fixed {
-            position: fixed; bottom: 0; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: -26px; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 480px; display: none; gap: 3vw;
             padding: 3vw 4vw 9vw 4vw; background: white; z-index: 50;
             box-shadow: 0 -2px 10px rgba(0,0,0,0.08);
@@ -455,7 +412,7 @@
         }
         .plin-option-btn:active { border-color: #00cba9; box-shadow: 0 4px 16px rgba(0,203,169,0.15); }
 
-        /* ══ LOADING OVERLAY (dentro de yapear) ══ */
+        /* ══ LOADING OVERLAY (yapear) ══ */
         #loadingOverlay {
             position: fixed; inset: 0; background: rgba(0,0,0,0.55);
             display: flex; align-items: center; justify-content: center;
@@ -475,15 +432,28 @@
         }
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ══ PANTALLA COMPROBANTE (pantalla completa) ══ */
+        /* ══ PANTALLA COMPROBANTE — PANTALLA COMPLETA SIN BORDES ══ */
         #screen-receipt {
-            position: fixed; inset: 0; background: #000;
+            position: fixed; inset: 0;
             display: none; justify-content: center; align-items: center;
-            z-index: 200; width: 100vw; height: 100vh; height: 100dvh;
+            z-index: 200;
+            width: 100vw;
+            height: 100vh;
+            height: 100dvh;
+            background: transparent;
+            overflow: hidden;
         }
         #screen-receipt.active { display: flex; }
+
         #receiptImage {
-            width: 100%; height: 100%; object-fit: contain; pointer-events: none;
+            /* Ocupa TODA la pantalla sin bordes negros */
+            width: 100%;
+            height: 100%;
+            height: 100dvh;
+            object-fit: cover;
+            object-position: center top;
+            display: block;
+            pointer-events: none;
             -webkit-touch-callout: none;
             animation: receiptAppear 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
@@ -537,7 +507,7 @@
         </div>
     </div>
 
-    <!-- ══ LOADING OVERLAY INICIAL (sobre el menú que carga por partes) ══ -->
+    <!-- ══ LOADING OVERLAY INICIAL ══ -->
     <div id="main-loading-overlay">
         <div class="main-loading-box">
             <div class="main-loading-spinner"></div>
@@ -547,7 +517,6 @@
     <!-- ══ PANTALLA PRINCIPAL ══ -->
     <div id="screen-main">
         <div class="app-container">
-            <!-- Sección 1: Header -->
             <div class="header main-section" id="sec-header">
                 <button class="header-btn">
                     <svg viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
@@ -564,7 +533,6 @@
                 </button>
             </div>
 
-            <!-- Sección 2: Servicios -->
             <div class="services-grid main-section" id="sec-services">
                 <div class="service-item">
                     <div class="service-icon"><img src="https://i.ibb.co/pr9mvKQf/Icono-recargar-celular.png" alt="Recargar celular"></div>
@@ -617,7 +585,6 @@
                 </div>
             </div>
 
-            <!-- Sección 3: Carrusel -->
             <div class="carousel-container main-section" id="sec-carousel">
                 <div class="carousel" id="carousel">
                     <div class="carousel-track" id="carouselTrack">
@@ -639,11 +606,9 @@
                 </div>
             </div>
 
-            <!-- Sección 4: Panel inferior -->
             <div class="bottom-panel main-section" id="sec-bottom">
                 <div class="balance-card">
                     <div class="balance-left" onclick="toggleBalanceVisibility()">
-                        <!-- Icono ojo abierto (SVG inline) -->
                         <div class="balance-icon" id="eyeIconWrapper">
                             <img id="eyeIconImg" class="eye-svg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23742284'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/%3E%3C/svg%3E" alt="ojo">
                         </div>
@@ -756,9 +721,10 @@
         </div>
     </div>
 
-    <!-- ══ PANTALLA COMPROBANTE (pantalla completa) ══ -->
+    <!-- ══ PANTALLA COMPROBANTE — PANTALLA COMPLETA ══ -->
     <div id="screen-receipt">
         <img id="receiptImage" alt="Comprobante" />
+        <button onclick="hideReceiptScreen()" style="position:absolute;top:0;right:0;width:120px;height:120px;border:none;background:transparent;cursor:pointer;z-index:210;"></button>
     </div>
 
     <!-- Modal confirmación descarga -->
@@ -800,7 +766,6 @@
             try {
                 const bv = document.getElementById('balanceValue');
                 const bal = localStorage.getItem('yape_balance');
-                // Si hay balance guardado úsalo, si no asegura el formato correcto
                 if (bal && bal.trim() !== '') {
                     bv.textContent = bal;
                 } else {
@@ -829,17 +794,12 @@
         ];
 
         function loadSectionsSequentially(callback) {
-            // Ocultar botones fijos hasta que todo cargue
             document.getElementById('actionButtonsFixed').style.display = 'none';
-            // Mostrar el overlay de carga sobre el menú
             mainLoadingOvl.classList.add('active');
-
             let i = 0;
-            // Carga total en ~1 segundo: 4 secciones × ~250ms
             const timesPool = [200, 250, 300];
             function nextSection() {
                 if (i >= sections.length) {
-                    // Todo cargado: ocultar overlay y mostrar botones
                     mainLoadingOvl.classList.remove('active');
                     setTimeout(() => {
                         mainLoadingOvl.classList.add('gone');
@@ -863,7 +823,6 @@
                 splashOverlay.classList.add('hiding');
                 splashOverlay.addEventListener('transitionend', () => {
                     splashOverlay.classList.add('gone');
-                    // Iniciar carga por partes del menú
                     loadSectionsSequentially(null);
                 }, { once: true });
             }, 3000);
@@ -873,13 +832,6 @@
         let plinMode = false;
         const yapeHistory = [];
         let deleteHistoryIndex = null;
-
-        function formatAmount(rawAmount) {
-            // Asegurar siempre 2 decimales: "10" → "10.00", "10.50" → "10.50"
-            const num = parseFloat(rawAmount);
-            if (isNaN(num)) return rawAmount;
-            return num.toFixed(2);
-        }
 
         function formatDateTimeNow() {
             const now = new Date();
@@ -891,9 +843,7 @@
             const isPM = hours >= 12;
             hours = hours % 12 || 12;
             const hh = hours.toString().padStart(2, '0');
-            // Para el historial: sin puntos (pm/am)
             const timeShort = `${hh}:${minutes} ${isPM ? 'pm' : 'am'}`;
-            // Para el baucher: con puntos (p. m./a. m.)
             const timeLong  = `${hh}:${minutes} ${isPM ? 'p. m.' : 'a. m.'}`;
             return { date, time: timeShort, timeBaucher: timeLong };
         }
@@ -928,7 +878,6 @@
                 </div>`;
             }).join('');
 
-            // Agregar long-press a cada item
             list.querySelectorAll('.movement-item').forEach(item => {
                 let pressTimer;
                 let pressTriggered = false;
@@ -945,7 +894,6 @@
                 item.addEventListener('touchend', () => { clearTimeout(pressTimer); }, { passive: true });
                 item.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
 
-                // Mouse (escritorio)
                 item.addEventListener('mousedown', () => {
                     pressTriggered = false;
                     pressTimer = setTimeout(() => {
@@ -999,7 +947,6 @@
         const screenReceipt  = document.getElementById('screen-receipt');
         const actionBtnsFixed = document.getElementById('actionButtonsFixed');
 
-        // Icono ojito tachado: imagen de la URL proporcionada
         const EYE_OPEN_SVG = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23742284'%3E%3Cpath d='M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z'/%3E%3C/svg%3E";
         const EYE_CLOSED_URL = "https://i.ibb.co/6cVnr7HK/Ojito-Tachado-Yape.png";
 
@@ -1007,10 +954,10 @@
             const img = document.getElementById('eyeIconImg');
             if (open) {
                 img.src = EYE_OPEN_SVG;
-                img.className = 'eye-svg'; /* ojito SVG = más pequeño */
+                img.className = 'eye-svg';
             } else {
                 img.src = EYE_CLOSED_URL;
-                img.className = 'eye-img'; /* ojito link = más grande */
+                img.className = 'eye-img';
             }
         }
 
@@ -1018,7 +965,6 @@
             plinMode = false;
             document.getElementById('btnOtrosBancos').classList.remove('active-otros');
 
-            // Ocultar saldo
             const bv = document.getElementById('balanceValue');
             const bl = document.getElementById('balanceLabel');
             bv.classList.add('hidden');
@@ -1083,7 +1029,6 @@
             screenPlin.classList.add('active');
         });
 
-        // ══ PANTALLA PLIN ══
         document.getElementById('btnPlinBack').addEventListener('click', () => { screenPlin.classList.remove('active'); });
         document.getElementById('btnPlinClose').addEventListener('click', () => { screenPlin.classList.remove('active'); closeYapear(); });
         document.getElementById('btnPlinOption').addEventListener('click', () => { plinMode = true; screenPlin.classList.remove('active'); });
@@ -1156,12 +1101,12 @@
             if (bv.classList.contains('hidden')) {
                 bv.classList.remove('hidden');
                 bl.textContent = 'Ocultar saldo';
-                setEyeIcon(false); // ojo tachado cuando muestra saldo
+                setEyeIcon(false);
                 balanceVisible = true;
             } else {
                 bv.classList.add('hidden');
                 bl.textContent = 'Mostrar saldo';
-                setEyeIcon(true); // ojo abierto cuando oculta saldo
+                setEyeIcon(true);
                 balanceVisible = false;
             }
         }
@@ -1363,11 +1308,19 @@
 
         let highResDataURL = null;
 
+        // ══ CARGA DE FUENTE ROBOTO PARA EL CANVAS ══
+        // Forzamos que Roboto esté disponible en el canvas antes de dibujar
+        function ensureRobotoLoaded() {
+            return document.fonts.load('bold 40px "Roboto"').then(() => {
+                return document.fonts.load('400 40px "Roboto"');
+            });
+        }
+
         function generateReceipt(name, amount, phone) {
-            const displayAmount = amount; // exactamente como lo puso el usuario (para baucher)
+            const displayAmount = amount;
             const historyAmount = parseFloat(amount) % 1 === 0
                 ? parseFloat(amount).toFixed(2)
-                : amount; // historial: enteros con .00, decimales tal cual
+                : amount;
             const formattedPhone = `*** *** ${phone.padStart(3, '0')}`;
             const { date: formattedDate, time: formattedTime, timeBaucher } = formatDateTimeNow();
             const rand1 = Math.floor(Math.random() * 10);
@@ -1376,84 +1329,117 @@
             const operationCode = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
             const destinoText = plinMode ? 'Plin' : 'Yape';
 
-            const baseImage = new Image();
-            baseImage.crossOrigin = 'Anonymous';
-            baseImage.src = 'https://i.ibb.co/TB01kNdx/YAPE-BAUCHER-v5.jpg';
+            // Primero aseguramos que Roboto esté cargada, luego cargamos la imagen
+            ensureRobotoLoaded().then(() => {
+                const baseImage = new Image();
+                baseImage.crossOrigin = 'Anonymous';
+                baseImage.src = 'https://i.ibb.co/TB01kNdx/YAPE-BAUCHER-v5.jpg';
 
-            baseImage.onload = function () {
-                const offCanvas = document.createElement('canvas');
-                offCanvas.width  = baseImage.naturalWidth;
-                offCanvas.height = baseImage.naturalHeight;
-                const ctx = offCanvas.getContext('2d');
-                ctx.drawImage(baseImage, 0, 0, offCanvas.width, offCanvas.height);
+                baseImage.onload = function () {
+                    // ── Canvas de alta resolución ──
+                    const offCanvas = document.createElement('canvas');
+                    offCanvas.width  = baseImage.naturalWidth;
+                    offCanvas.height = baseImage.naturalHeight;
+                    const ctx = offCanvas.getContext('2d');
 
-                const cfg = RECEIPT_CONFIG;
-                const fontFam = cfg.fontFamily;
+                    // Dibujamos la imagen base
+                    ctx.drawImage(baseImage, 0, 0, offCanvas.width, offCanvas.height);
 
-                // Monto con 2 decimales en el baucher
-                ctx.font = `${cfg.amount.font} ${cfg.amount.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.amount.color;
-                ctx.fillText(displayAmount, cfg.amount.x, cfg.amount.y);
+                    const cfg = RECEIPT_CONFIG;
+                    const fontFam = cfg.fontFamily;
 
-                ctx.font = `${cfg.name.font} ${cfg.name.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.name.color;
-                ctx.fillText(name, cfg.name.x, cfg.name.y);
+                    // ── Todos los textos se dibujan directamente sobre el canvas ──
+                    // Cada fillText "hornea" el texto dentro del pixel buffer de la imagen
 
-                ctx.font = `${cfg.date.font} ${cfg.date.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.date.color;
-                ctx.fillText(formattedDate, cfg.date.x, cfg.date.y);
+                    // Monto
+                    ctx.font = `${cfg.amount.font} ${cfg.amount.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.amount.color;
+                    ctx.fillText(displayAmount, cfg.amount.x, cfg.amount.y);
 
-                ctx.font = `${cfg.time.font} ${cfg.time.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.time.color;
-                ctx.fillText(timeBaucher, cfg.time.x, cfg.time.y);
+                    // Nombre
+                    ctx.font = `${cfg.name.font} ${cfg.name.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.name.color;
+                    ctx.fillText(name, cfg.name.x, cfg.name.y);
 
-                ctx.font = `${cfg.random1.font} ${cfg.random1.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.random1.color;
-                ctx.fillText(rand1.toString(), cfg.random1.x, cfg.random1.y);
-                ctx.fillText(rand2.toString(), cfg.random2.x, cfg.random2.y);
-                ctx.fillText(rand3.toString(), cfg.random3.x, cfg.random3.y);
+                    // Fecha
+                    ctx.font = `${cfg.date.font} ${cfg.date.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.date.color;
+                    ctx.fillText(formattedDate, cfg.date.x, cfg.date.y);
 
-                ctx.font = `${cfg.phone.font} ${cfg.phone.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.phone.color;
-                ctx.fillText(formattedPhone, cfg.phone.x, cfg.phone.y);
+                    // Hora
+                    ctx.font = `${cfg.time.font} ${cfg.time.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.time.color;
+                    ctx.fillText(timeBaucher, cfg.time.x, cfg.time.y);
 
-                ctx.font = `${cfg.yapeText.font} ${cfg.yapeText.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.yapeText.color;
-                ctx.fillText(destinoText, cfg.yapeText.x, cfg.yapeText.y);
+                    // Números aleatorios
+                    ctx.font = `${cfg.random1.font} ${cfg.random1.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.random1.color;
+                    ctx.fillText(rand1.toString(), cfg.random1.x, cfg.random1.y);
+                    ctx.fillText(rand2.toString(), cfg.random2.x, cfg.random2.y);
+                    ctx.fillText(rand3.toString(), cfg.random3.x, cfg.random3.y);
 
-                ctx.font = `${cfg.operationCode.font} ${cfg.operationCode.fontSize}px ${fontFam}`;
-                ctx.fillStyle = cfg.operationCode.color;
-                ctx.fillText(operationCode, cfg.operationCode.x, cfg.operationCode.y);
+                    // Teléfono
+                    ctx.font = `${cfg.phone.font} ${cfg.phone.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.phone.color;
+                    ctx.fillText(formattedPhone, cfg.phone.x, cfg.phone.y);
 
-                const scaledCanvas = document.createElement('canvas');
-                const SCALE = 0.55;
-                scaledCanvas.width  = Math.round(offCanvas.width  * SCALE);
-                scaledCanvas.height = Math.round(offCanvas.height * SCALE);
-                const sCtx = scaledCanvas.getContext('2d');
-                sCtx.imageSmoothingEnabled = true;
-                sCtx.imageSmoothingQuality = 'high';
-                sCtx.drawImage(offCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+                    // Destino (Yape / Plin)
+                    ctx.font = `${cfg.yapeText.font} ${cfg.yapeText.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.yapeText.color;
+                    ctx.fillText(destinoText, cfg.yapeText.x, cfg.yapeText.y);
 
-                const dataURL = scaledCanvas.toDataURL('image/jpeg', 0.72);
-                highResDataURL = dataURL;
+                    // Código de operación
+                    ctx.font = `${cfg.operationCode.font} ${cfg.operationCode.fontSize}px ${fontFam}`;
+                    ctx.fillStyle = cfg.operationCode.color;
+                    ctx.fillText(operationCode, cfg.operationCode.x, cfg.operationCode.y);
 
-                // Guardar en historial: monto con .00 si es entero, hora sin puntos
-                yapeHistory.push({ name, amount, displayAmount: historyAmount, date: formattedDate, time: formattedTime, dataURL });
-                saveData();
+                    // ── Exportamos el canvas completo (texto ya integrado) como JPEG ──
+                    // Usamos toBlob para mayor compatibilidad y velocidad
+                    offCanvas.toBlob((blob) => {
+                        const dataURL = URL.createObjectURL(blob);
 
-                if (movementsOpen) renderMovements();
+                        // Para el historial guardamos una versión más pequeña como dataURL
+                        const scaledCanvas = document.createElement('canvas');
+                        const SCALE = 0.55;
+                        scaledCanvas.width  = Math.round(offCanvas.width  * SCALE);
+                        scaledCanvas.height = Math.round(offCanvas.height * SCALE);
+                        const sCtx = scaledCanvas.getContext('2d');
+                        sCtx.imageSmoothingEnabled = true;
+                        sCtx.imageSmoothingQuality = 'high';
+                        sCtx.drawImage(offCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
+                        const smallDataURL = scaledCanvas.toDataURL('image/jpeg', 0.82);
 
-                hideLoading();
+                        highResDataURL = smallDataURL;
 
-                const receiptImage = document.getElementById('receiptImage');
-                receiptImage.src = dataURL;
-                showReceiptScreen();
-            };
+                        yapeHistory.push({
+                            name,
+                            amount,
+                            displayAmount: historyAmount,
+                            date: formattedDate,
+                            time: formattedTime,
+                            dataURL: smallDataURL
+                        });
+                        saveData();
 
-            baseImage.onerror = function () {
-                hideLoading();
-                alert('No se pudo cargar la imagen del comprobante. Verifica tu conexión.');
-            };
+                        if (movementsOpen) renderMovements();
+
+                        hideLoading();
+
+                        const receiptImage = document.getElementById('receiptImage');
+                        receiptImage.src = smallDataURL;
+                        showReceiptScreen();
+
+                        // Liberamos el blob URL temporal
+                        URL.revokeObjectURL(dataURL);
+
+                    }, 'image/jpeg', 0.92);
+                };
+
+                baseImage.onerror = function () {
+                    hideLoading();
+                    alert('No se pudo cargar la imagen del comprobante. Verifica tu conexión.');
+                };
+            });
         }
 
         function showReceiptScreen() {
@@ -1476,16 +1462,17 @@
         // ══ INTERACCIONES COMPROBANTE ══
         let longPressTimer, longPressTriggered = false;
 
-        screenReceipt.addEventListener('touchstart', function () {
+        screenReceipt.addEventListener('touchstart', function (e) {
+            if (e.target.tagName === 'BUTTON') return;
             longPressTriggered = false;
             longPressTimer = setTimeout(() => { longPressTriggered = true; openDownloadConfirm(); }, 600);
         });
-        screenReceipt.addEventListener('touchend', function () {
+        screenReceipt.addEventListener('touchend', function (e) {
+            if (e.target.tagName === 'BUTTON') return;
             clearTimeout(longPressTimer);
-            if (!longPressTriggered) hideReceiptScreen();
         });
         screenReceipt.addEventListener('touchmove', function () { clearTimeout(longPressTimer); });
-        screenReceipt.addEventListener('click', function () { if (!longPressTriggered) hideReceiptScreen(); });
+        screenReceipt.addEventListener('click', function (e) { if (e.target.tagName !== 'BUTTON' && longPressTriggered) return; });
 
         // ══ DESCARGA ══
         function openDownloadConfirm() { document.getElementById('downloadConfirmModal').classList.add('active'); }
