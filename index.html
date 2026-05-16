@@ -272,7 +272,6 @@
         .movement-chevron { flex-shrink: 0; }
         .movement-chevron svg { width: 14px; height: 14px; }
 
-        /* Botón Ver todos */
         .ver-todos-btn {
             padding: 14px; text-align: center; color: #742284;
             font-size: 14px; font-weight: 600; cursor: pointer;
@@ -569,6 +568,23 @@
         }
         .gate-btn:active { transform: scale(0.97); }
         .gate-btn:disabled { opacity: 0.5; cursor: default; }
+
+        /* ══ GATE INSTALLING STATE ══ */
+        .gate-installing {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 16px; margin-top: 8px;
+        }
+        .gate-spinner {
+            width: 40px; height: 40px;
+            border: 3.5px solid rgba(255,255,255,0.2);
+            border-top-color: #03C7B1;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        .gate-installing-text {
+            color: rgba(255,255,255,0.85); font-size: 14px;
+            text-align: center; line-height: 1.5;
+        }
     </style>
 </head>
 <body>
@@ -579,7 +595,7 @@
             <img src="https://vectorseek.com/wp-content/uploads/2023/09/Yape-Logo-Vector.svg-.png" alt="Yape">
         </div>
         <div class="gate-title">Yape</div>
-        <div class="gate-subtitle">Ingresa la contraseña<br>para continuar</div>
+        <div class="gate-subtitle">Ingresa la contraseña<br>para instalar la aplicación</div>
         <div class="gate-input-wrap">
             <input class="gate-input" id="gateInput" type="password" placeholder="Contraseña" autocomplete="off" maxlength="20">
             <button class="gate-eye" id="gateEyeBtn" onclick="toggleGateEye()">👁</button>
@@ -962,7 +978,6 @@
             return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         }
 
-        // ══ HELPER: attach long-press to items ══
         function attachLongPress(container, fromAll) {
             container.querySelectorAll('.movement-item').forEach(item => {
                 let pressTimer;
@@ -971,10 +986,7 @@
                     deleteHistoryFromAll = fromAll;
                     openDeleteHistory(idx);
                 };
-
-                item.addEventListener('touchstart', () => {
-                    pressTimer = setTimeout(handler, 600);
-                }, { passive: true });
+                item.addEventListener('touchstart', () => { pressTimer = setTimeout(handler, 600); }, { passive: true });
                 item.addEventListener('touchend',  () => { clearTimeout(pressTimer); }, { passive: true });
                 item.addEventListener('touchmove', () => { clearTimeout(pressTimer); }, { passive: true });
                 item.addEventListener('mousedown', () => { pressTimer = setTimeout(handler, 600); });
@@ -983,18 +995,15 @@
             });
         }
 
-        // ══ RENDER MOVIMIENTOS (máx 7 + botón Ver todos) ══
         function renderMovements() {
             const list = document.getElementById('movementsList');
             if (yapeHistory.length === 0) {
                 list.innerHTML = '<div class="movements-empty">Sin movimientos aún</div>';
                 return;
             }
-
             const reversed = yapeHistory.slice().reverse();
             const hayMas   = reversed.length > 7;
             const visibles = hayMas ? reversed.slice(0, 7) : reversed;
-
             const itemsHTML = visibles.map((entry, i) => {
                 const realIndex = yapeHistory.length - 1 - i;
                 return `
@@ -1011,20 +1020,16 @@
                     </div>
                 </div>`;
             }).join('');
-
             const verTodosHTML = hayMas
                 ? `<div class="ver-todos-btn" onclick="openAllMovements()">Ver todos (${reversed.length})</div>`
                 : '';
-
             list.innerHTML = itemsHTML + verTodosHTML;
             attachLongPress(list, false);
         }
 
-        // ══ PANTALLA TODOS LOS MOVIMIENTOS ══
         function openAllMovements() {
             const allList  = document.getElementById('all-movements-list');
             const reversed = yapeHistory.slice().reverse();
-
             allList.innerHTML = reversed.map((entry, i) => {
                 const realIndex = yapeHistory.length - 1 - i;
                 return `
@@ -1041,7 +1046,6 @@
                     </div>
                 </div>`;
             }).join('');
-
             attachLongPress(allList, true);
             document.getElementById('screen-all-movements').classList.add('active');
         }
@@ -1068,7 +1072,6 @@
             img.style.animation = '';
         }
 
-        // ══ BORRAR HISTORIAL ══
         function openDeleteHistory(index) {
             deleteHistoryIndex = index;
             document.getElementById('deleteHistoryModal').classList.add('active');
@@ -1082,7 +1085,6 @@
                 yapeHistory.splice(deleteHistoryIndex, 1);
                 saveData();
                 if (deleteHistoryFromAll) {
-                    // Refrescar pantalla "Ver todos"
                     if (yapeHistory.length === 0) {
                         closeAllMovements();
                     } else {
@@ -1119,7 +1121,6 @@
             document.getElementById('balanceValue').classList.add('hidden');
             document.getElementById('balanceLabel').textContent = 'Mostrar saldo';
             setEyeIcon(true);
-
             if (movementsOpen) {
                 movementsOpen = false;
                 document.getElementById('movementsList').classList.remove('open');
@@ -1127,7 +1128,6 @@
                 document.getElementById('movementsToggle').classList.remove('expanded');
                 document.getElementById('movementsSpacer').style.display = '';
             }
-
             screenMain.classList.add('slide-out');
             actionBtnsFixed.style.display = 'none';
             screenYapear.classList.add('slide-in');
@@ -1156,7 +1156,6 @@
         document.getElementById('btnBack').addEventListener('click', closeYapear);
         document.getElementById('btnClose').addEventListener('click', closeYapear);
 
-        // ══ BOTÓN OTROS BANCOS ══
         const amountInputEl  = document.getElementById('amountInput');
         const btnOtrosBancos = document.getElementById('btnOtrosBancos');
 
@@ -1284,7 +1283,6 @@
             const arrow  = document.getElementById('movementsArrow');
             const toggle = document.getElementById('movementsToggle');
             const spacer = document.getElementById('movementsSpacer');
-
             if (movementsOpen) {
                 renderMovements();
                 list.classList.add('open');
@@ -1302,7 +1300,6 @@
             }
         });
 
-        // ══ TOUCH FEEDBACK ══
         document.querySelectorAll('.service-item, .header-btn, .action-btn').forEach(btn => {
             btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; }, { passive: true });
             btn.addEventListener('touchend',   () => { btn.style.transform = 'scale(1)'; },   { passive: true });
@@ -1445,13 +1442,16 @@
             random1:       { x: 756,  y: 1100, fontSize: 49,  color: '#2C2044', font: 'bold' },
             random2:       { x: 840,  y: 1100, fontSize: 49,  color: '#2C2044', font: 'bold' },
             random3:       { x: 927,  y: 1100, fontSize: 49,  color: '#2C2044', font: 'bold' },
-            phone:         { x: 799,  y: 1360, fontSize: 39,  color: '#2C2044', font: '500' },
-            yapeText:      { x: 900,  y: 1427, fontSize: 39,  color: '#2C2044', font: '500' },
-            operationCode: { x: 813,  y: 1504, fontSize: 39,  color: '#2C2044', font: '500' },
+            phone:         { x: 790,  y: 1360, fontSize: 41,  color: '#2C2044', font: '500' },
+            yapeText:      { x: 890,  y: 1427, fontSize: 41,  color: '#2C2044', font: '500' },
+            operationCode: { x: 800,  y: 1504, fontSize: 40,  color: '#2C2044', font: '500' },
             fontFamily: '"RobotoCanvas", "Roboto", sans-serif'
         };
 
+        // ══ dataURL del comprobante en ALTA CALIDAD para descarga ══
         let highResDataURL = null;
+        // ══ dataURL reducido para mostrar en pantalla ══
+        let displayDataURL = null;
 
         // ══ CARGA DE FUENTE ROBOTO PARA EL CANVAS ══
         let _robotoLoaded = null;
@@ -1512,6 +1512,7 @@
             ensureRobotoLoaded().then(() => loadImageAsDataUri(IMG_URL)).then(dataUri => {
                 const baseImage = new Image();
                 baseImage.onload = function () {
+                    // ── Canvas en resolución ORIGINAL (alta calidad) ──
                     const offCanvas = document.createElement('canvas');
                     offCanvas.width  = baseImage.naturalWidth;
                     offCanvas.height = baseImage.naturalHeight;
@@ -1555,22 +1556,35 @@
                     ctx.fillStyle = cfg.operationCode.color;
                     ctx.fillText(operationCode, cfg.operationCode.x, cfg.operationCode.y);
 
-                    const scaledCanvas = document.createElement('canvas');
-                    const SCALE = 0.55;
-                    scaledCanvas.width  = Math.round(offCanvas.width  * SCALE);
-                    scaledCanvas.height = Math.round(offCanvas.height * SCALE);
-                    const sCtx = scaledCanvas.getContext('2d');
-                    sCtx.imageSmoothingEnabled = true;
-                    sCtx.imageSmoothingQuality = 'high';
-                    sCtx.drawImage(offCanvas, 0, 0, scaledCanvas.width, scaledCanvas.height);
-                    const smallDataURL = scaledCanvas.toDataURL('image/jpeg', 0.82);
+                    // ── Alta calidad para DESCARGA: PNG sin pérdida ──
+                    highResDataURL = offCanvas.toDataURL('image/png');
 
-                    highResDataURL = smallDataURL;
-                    yapeHistory.push({ name, amount, displayAmount: historyAmount, date: formattedDate, time: formattedTime, dataURL: smallDataURL });
+                    // ── Versión reducida para MOSTRAR en pantalla (más rápido) ──
+                    const displayCanvas = document.createElement('canvas');
+                    const DISPLAY_SCALE = 0.6;
+                    displayCanvas.width  = Math.round(offCanvas.width  * DISPLAY_SCALE);
+                    displayCanvas.height = Math.round(offCanvas.height * DISPLAY_SCALE);
+                    const dCtx = displayCanvas.getContext('2d');
+                    dCtx.imageSmoothingEnabled = true;
+                    dCtx.imageSmoothingQuality = 'high';
+                    dCtx.drawImage(offCanvas, 0, 0, displayCanvas.width, displayCanvas.height);
+                    displayDataURL = displayCanvas.toDataURL('image/jpeg', 0.88);
+
+                    // ── Guardar en historial con la versión ALTA CALIDAD ──
+                    yapeHistory.push({
+                        name,
+                        amount,
+                        displayAmount: historyAmount,
+                        date: formattedDate,
+                        time: formattedTime,
+                        dataURL: highResDataURL   // Se guarda PNG de alta calidad
+                    });
                     saveData();
                     if (movementsOpen) renderMovements();
+
                     hideLoading();
-                    document.getElementById('receiptImage').src = smallDataURL;
+                    // Mostrar versión reducida en pantalla
+                    document.getElementById('receiptImage').src = displayDataURL;
                     showReceiptScreen();
                 };
                 baseImage.onerror = function () {
@@ -1611,14 +1625,15 @@
         screenReceipt.addEventListener('touchmove', function ()  { clearTimeout(longPressTimer); });
         screenReceipt.addEventListener('click',     function (e) { if (e.target.tagName !== 'BUTTON' && longPressTriggered) return; });
 
-        // ══ DESCARGA ══
+        // ══ DESCARGA EN ALTA CALIDAD ══
         function openDownloadConfirm()  { document.getElementById('downloadConfirmModal').classList.add('active'); }
         function closeDownloadConfirm() { document.getElementById('downloadConfirmModal').classList.remove('active'); }
         function confirmDownload() {
             closeDownloadConfirm();
             if (!highResDataURL) return;
+            // Descarga el PNG de alta calidad
             const link = document.createElement('a');
-            link.download = 'Yape_Comprobante.jpg';
+            link.download = 'Yape_Comprobante.png';
             link.href = highResDataURL;
             document.body.appendChild(link);
             link.click();
@@ -1630,7 +1645,10 @@
 
         // ══ PWA ══
         let deferredInstallPrompt = null;
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredInstallPrompt = e; });
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
 
         // ══ PASSWORD GATE ══
         const GATE_PASSWORD = 'Pak4sx7';
@@ -1643,16 +1661,40 @@
 
         function initGate() {
             const gate = document.getElementById('password-gate');
-            if (isRunningAsPWA()) { gate.classList.add('gone'); return; }
-            if (sessionStorage.getItem('yape_gate_ok') === '1') { gate.classList.add('gone'); return; }
+
+            // Si ya está instalada como PWA, saltar gate directamente
+            if (isRunningAsPWA()) {
+                gate.classList.add('gone');
+                return;
+            }
+
+            // Si ya verificó en esta sesión, saltar gate
+            if (sessionStorage.getItem('yape_gate_ok') === '1') {
+                gate.classList.add('gone');
+                return;
+            }
+
+            // Mostrar gate
             gate.style.display = 'flex';
-            document.getElementById('gateInput').focus();
-            document.getElementById('gateInput').addEventListener('keydown', (e) => { if (e.key === 'Enter') verifyGate(); });
+            setTimeout(() => {
+                document.getElementById('gateInput').focus();
+            }, 300);
+
+            document.getElementById('gateInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') verifyGate();
+            });
         }
 
         function toggleGateEye() {
             const inp = document.getElementById('gateInput');
-            inp.type = inp.type === 'password' ? 'text' : 'password';
+            const btn = document.getElementById('gateEyeBtn');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                btn.textContent = '🙈';
+            } else {
+                inp.type = 'password';
+                btn.textContent = '👁';
+            }
         }
 
         function verifyGate() {
@@ -1665,22 +1707,52 @@
                 err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
                 inp.value = '';
                 inp.focus();
+                // Shake animation
+                inp.style.animation = 'none';
+                inp.style.borderColor = 'rgba(255,80,80,0.7)';
+                setTimeout(() => { inp.style.borderColor = ''; }, 1200);
                 return;
             }
 
             err.textContent = '';
             btn.disabled = true;
-            btn.textContent = 'Instalando...';
             sessionStorage.setItem('yape_gate_ok', '1');
 
             if (deferredInstallPrompt) {
+                // Hay prompt de instalación disponible → instalar
+                btn.textContent = 'Instalando...';
                 deferredInstallPrompt.prompt();
-                deferredInstallPrompt.userChoice.then(() => {
+                deferredInstallPrompt.userChoice.then((choiceResult) => {
                     deferredInstallPrompt = null;
+                    document.getElementById('password-gate').classList.add('gone');
+                }).catch(() => {
                     document.getElementById('password-gate').classList.add('gone');
                 });
             } else {
-                document.getElementById('password-gate').classList.add('gone');
+                // No hay prompt (ya instalada, iOS, o navegador no compatible)
+                // Mostrar instrucciones de instalación manual según el SO
+                const ua = navigator.userAgent.toLowerCase();
+                const isIOS = /iphone|ipad|ipod/.test(ua);
+                const isAndroid = /android/.test(ua);
+
+                if (isIOS) {
+                    btn.textContent = '✓ Verificado';
+                    err.style.color = '#7dffd4';
+                    err.textContent = 'Toca Compartir → "Añadir a pantalla de inicio"';
+                    setTimeout(() => {
+                        document.getElementById('password-gate').classList.add('gone');
+                    }, 3000);
+                } else if (isAndroid) {
+                    btn.textContent = '✓ Verificado';
+                    err.style.color = '#7dffd4';
+                    err.textContent = 'Toca el menú ⋮ → "Añadir a pantalla de inicio"';
+                    setTimeout(() => {
+                        document.getElementById('password-gate').classList.add('gone');
+                    }, 3000);
+                } else {
+                    // Desktop u otro
+                    document.getElementById('password-gate').classList.add('gone');
+                }
             }
         }
 
