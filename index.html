@@ -13,6 +13,7 @@
     <link rel="shortcut icon" type="image/png" href="https://vectorseek.com/wp-content/uploads/2023/09/Yape-Logo-Vector.svg-.png">
     <title>Yape</title>
     <meta name="theme-color" content="#660085">
+    <link rel="manifest" href="data:application/json,{%22name%22:%22Yape%22,%22short_name%22:%22Yape%22,%22start_url%22:%22.%22,%22display%22:%22standalone%22,%22background_color%22:%22%23660085%22,%22theme_color%22:%22%23660085%22,%22icons%22:[{%22src%22:%22https://vectorseek.com/wp-content/uploads/2023/09/Yape-Logo-Vector.svg-.png%22,%22sizes%22:%22192x192%22,%22type%22:%22image/png%22},{%22src%22:%22https://vectorseek.com/wp-content/uploads/2023/09/Yape-Logo-Vector.svg-.png%22,%22sizes%22:%22512x512%22,%22type%22:%22image/png%22}]}">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
@@ -496,9 +497,80 @@
         .delete-history-btn:active { transform: scale(0.97); }
 
         @media (min-width: 481px) { .app-container { border-radius: 0; } }
+
+        /* ══ PASSWORD GATE ══ */
+        #password-gate {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #660085;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            gap: 0; padding: 40px 30px;
+        }
+        #password-gate.gone { display: none; }
+
+        .gate-logo {
+            width: 110px; height: 110px; border-radius: 28px;
+            overflow: hidden; margin-bottom: 28px;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.3);
+        }
+        .gate-logo img { width: 100%; height: 100%; object-fit: cover; }
+
+        .gate-title {
+            font-size: 22px; font-weight: 700; color: white;
+            margin-bottom: 8px; text-align: center;
+        }
+        .gate-subtitle {
+            font-size: 14px; color: rgba(255,255,255,0.7);
+            margin-bottom: 32px; text-align: center; line-height: 1.5;
+        }
+        .gate-input-wrap {
+            width: 100%; max-width: 300px; position: relative; margin-bottom: 16px;
+        }
+        .gate-input {
+            width: 100%; padding: 15px 48px 15px 18px;
+            font-size: 16px; border-radius: 14px; border: 2px solid rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.12); color: white;
+            outline: none; letter-spacing: 2px; transition: border-color 0.2s;
+            -webkit-user-select: text; user-select: text;
+        }
+        .gate-input::placeholder { color: rgba(255,255,255,0.4); letter-spacing: 0; }
+        .gate-input:focus { border-color: rgba(255,255,255,0.6); }
+        .gate-eye {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; cursor: pointer; padding: 4px;
+            color: rgba(255,255,255,0.6); font-size: 18px;
+        }
+        .gate-error {
+            color: #ff8a8a; font-size: 13px; margin-bottom: 16px;
+            min-height: 18px; text-align: center;
+        }
+        .gate-btn {
+            width: 100%; max-width: 300px; padding: 16px;
+            background: #03C7B1; color: white; font-size: 16px; font-weight: 700;
+            border: none; border-radius: 14px; cursor: pointer;
+            box-shadow: 0 4px 20px rgba(3,199,177,0.4);
+            transition: transform 0.1s, opacity 0.2s;
+        }
+        .gate-btn:active { transform: scale(0.97); }
+        .gate-btn:disabled { opacity: 0.5; cursor: default; }
     </style>
 </head>
 <body>
+
+    <!-- ══ PASSWORD GATE ══ -->
+    <div id="password-gate">
+        <div class="gate-logo">
+            <img src="https://vectorseek.com/wp-content/uploads/2023/09/Yape-Logo-Vector.svg-.png" alt="Yape">
+        </div>
+        <div class="gate-title">Yape</div>
+        <div class="gate-subtitle">Ingresa la contraseña<br>para continuar</div>
+        <div class="gate-input-wrap">
+            <input class="gate-input" id="gateInput" type="password" placeholder="Contraseña" autocomplete="off" maxlength="20">
+            <button class="gate-eye" id="gateEyeBtn" onclick="toggleGateEye()">👁</button>
+        </div>
+        <div class="gate-error" id="gateError"></div>
+        <button class="gate-btn" id="gateBtn" onclick="verifyGate()">Verificar</button>
+    </div>
 
     <!-- ══ SPLASH ══ -->
     <div id="splash-overlay">
@@ -1545,6 +1617,83 @@
         document.getElementById('downloadConfirmModal').addEventListener('click', function (e) { if (e.target === this) closeDownloadConfirm(); });
 
         applySymbolConfig(symbolConfigEnteros['0']);
+
+        // ══ PWA — captura el evento beforeinstallprompt ══
+        let deferredInstallPrompt = null;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredInstallPrompt = e;
+        });
+
+        // ══ PASSWORD GATE ══
+        const GATE_PASSWORD = 'Pak4sx7';
+
+        // Detectar si ya está instalada como PWA (standalone) o si ya verificó antes
+        function isRunningAsPWA() {
+            return window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true
+                || document.referrer.startsWith('android-app://');
+        }
+
+        function initGate() {
+            const gate = document.getElementById('password-gate');
+            // Si ya está instalada como app, saltamos el gate
+            if (isRunningAsPWA()) {
+                gate.classList.add('gone');
+                return;
+            }
+            // Si ya pasó el gate antes en esta sesión
+            if (sessionStorage.getItem('yape_gate_ok') === '1') {
+                gate.classList.add('gone');
+                return;
+            }
+            // Mostrar gate
+            gate.style.display = 'flex';
+            document.getElementById('gateInput').focus();
+            document.getElementById('gateInput').addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') verifyGate();
+            });
+        }
+
+        function toggleGateEye() {
+            const inp = document.getElementById('gateInput');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        }
+
+        function verifyGate() {
+            const inp   = document.getElementById('gateInput');
+            const err   = document.getElementById('gateError');
+            const btn   = document.getElementById('gateBtn');
+            const value = inp.value;
+
+            if (value !== GATE_PASSWORD) {
+                err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
+                inp.value = '';
+                inp.focus();
+                return;
+            }
+
+            err.textContent = '';
+            btn.disabled = true;
+            btn.textContent = 'Instalando...';
+
+            sessionStorage.setItem('yape_gate_ok', '1');
+
+            // Intentar lanzar el prompt de instalación PWA
+            if (deferredInstallPrompt) {
+                deferredInstallPrompt.prompt();
+                deferredInstallPrompt.userChoice.then(() => {
+                    deferredInstallPrompt = null;
+                    document.getElementById('password-gate').classList.add('gone');
+                });
+            } else {
+                // En iOS o si el prompt ya no está disponible, cerrar el gate igual
+                document.getElementById('password-gate').classList.add('gone');
+            }
+        }
+
+        // Iniciar gate al cargar
+        initGate();
     </script>
 </body>
 </html>
