@@ -97,6 +97,7 @@
             background: var(--yape-purple);
             transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease;
             padding-bottom: 100px;
+            overscroll-behavior-y: none;
         }
         #screen-main.scrollable { overflow-y: auto; }
         #screen-main.slide-out  { transform: translateX(-40px); opacity: 0; pointer-events: none; }
@@ -203,7 +204,7 @@
             background: white; border-radius: 24px 24px 0 0;
             padding: clamp(4vw, 6vw, 8vw) 4vw 120px 4vw;
             margin-top: 2vw; box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
-            flex: 1;
+            flex: 1; min-height: calc(100vh - 40vw);
         }
 
         .balance-card {
@@ -223,7 +224,7 @@
         .balance-icon img.eye-img  { width: 100%; height: 90%; }
 
         .balance-label { font-size: clamp(14px, 4vw, 18px); font-weight: 500; color: var(--yape-purple); }
-        .balance-value { font-size: clamp(14px, 4vw, 18px); font-weight: 600; color: #1a1a1a; cursor: pointer; transition: opacity 0.2s; }
+        .balance-value { font-size: clamp(14px, 4vw, 18px); font-weight: 500; color: #1a1a1a; cursor: pointer; transition: opacity 0.2s; }
         .balance-value.hidden { visibility: hidden; opacity: 0; }
 
         /* ══ MOVIMIENTOS ══ */
@@ -249,10 +250,10 @@
             background: white;
             border: 1px solid #eee; border-top: none;
             border-radius: 0 0 10px 10px;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.1);
+            box-shadow: 0 18px 32px rgba(0,0,0,0.22);
             margin-bottom: 6vw;
         }
-        .movements-list.open { max-height: 600px; overflow-y: auto; }
+        .movements-list.open { max-height: 820px; overflow-y: auto; }
         .movements-list.closed { margin-bottom: 0; }
 
         .movements-empty { padding: 5vw 4vw; text-align: center; color: #aaa; font-size: clamp(13px, 3.5vw, 15px); }
@@ -268,16 +269,29 @@
         .movement-info { flex: 1; min-width: 0; }
         .movement-name { font-size: clamp(13px, 3.8vw, 16px); font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .movement-datetime { font-size: clamp(11px, 3vw, 13px); color: #999; margin-top: 1px; }
-        .movement-amount { font-size: clamp(14px, 4vw, 17px); font-weight: 700; color: #e05555; white-space: nowrap; flex-shrink: 0; }
-        .movement-chevron { flex-shrink: 0; }
-        .movement-chevron svg { width: 14px; height: 14px; }
+        /* Monto más pequeño, sin negrita */
+        .movement-amount { font-size: clamp(12px, 3.4vw, 14px); font-weight: 500; color: #e05555; white-space: nowrap; flex-shrink: 0; }
 
+        /* "Ver todos" más grande, verde, sombra notable */
         .ver-todos-btn {
-            padding: 14px; text-align: center; color: #742284;
-            font-size: 14px; font-weight: 600; cursor: pointer;
-            border-top: 1px solid #f0f0f0; background: #faf5ff;
+            padding: 20px 14px 16px;
+            text-align: center;
+            color: #03C7B1;
+            font-size: 15.5px;
+            font-weight: 700;
+            cursor: pointer;
+            border-top: 1px solid #f0f0f0;
+            background: #faf5ff;
             border-radius: 0 0 10px 10px;
             transition: background 0.15s;
+            box-shadow: 0 22px 36px rgba(0,0,0,0.28);
+            margin-bottom: 2px;
+        }
+        /* Espaciado extra invisible debajo de la lista para poder bajar más */
+        .movements-list.open::after {
+            content: '';
+            display: block;
+            height: 60px;
         }
         .ver-todos-btn:active { background: #f0e6fa; }
 
@@ -413,7 +427,10 @@
             padding: 15px 20px; font-weight: bold; font-size: 20px; color: #1a1a1a; flex-shrink: 0;
         }
         .plin-header-btn { cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; width: 30px; height: 30px; background: none; border: none; color: #1a1a1a; font-weight: bold; }
-        .plin-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 30px 20px; }
+        .plin-content {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: flex-start; padding: 30px 20px; gap: 12px;
+        }
         .plin-option-btn {
             width: 100%; max-width: 320px; padding: 12px 20px; background: white;
             border: 1.5px solid #e0e0e0; border-radius: 12px; font-size: 16px; font-weight: 600;
@@ -421,6 +438,7 @@
             transition: border-color 0.2s, box-shadow 0.2s; box-shadow: 0 1px 5px rgba(0,0,0,0.06);
         }
         .plin-option-btn:active { border-color: #00cba9; box-shadow: 0 4px 16px rgba(0,203,169,0.15); }
+        .plin-option-btn img { width: 40px; height: 40px; border-radius: 10px; object-fit: cover; flex-shrink: 0; }
 
         /* ══ LOADING OVERLAY (yapear) ══ */
         #loadingOverlay {
@@ -501,13 +519,14 @@
 
         /* ══ PANTALLA TODOS LOS MOVIMIENTOS ══ */
         #screen-all-movements {
-            position: fixed; inset: 0; background: #ffffff;
+            position: fixed; inset: 0; background: #f7f7f7;
             opacity: 0; pointer-events: none;
             transition: opacity 0.3s ease;
             z-index: 150; display: flex; flex-direction: column;
         }
         #screen-all-movements.active { opacity: 1; pointer-events: all; }
 
+        /* Header "Movimientos" */
         .all-movements-header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 16px 20px; border-bottom: 1px solid #eee;
@@ -523,6 +542,32 @@
         .all-movements-list {
             flex: 1; overflow-y: auto; padding-bottom: 40px;
         }
+
+        /* Cabecera de mes/año dentro de "Todos los movimientos" */
+        .month-group-header {
+            padding: 16px 20px 8px 20px;
+            font-size: 13px;
+            font-weight: 700;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            background: #f7f7f7;
+        }
+
+        /* Items de movimientos en pantalla "Todos" — más separados, con divisor */
+        .all-movement-item {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px;
+            background: white;
+            border-bottom: 1px solid #ececec;
+            cursor: pointer; transition: background 0.15s; gap: 2vw;
+        }
+        .all-movement-item:active { background: #f9f5ff; }
+
+        .all-movement-info { flex: 1; min-width: 0; }
+        .all-movement-name { font-size: 15px; font-weight: 600; color: #1a1a1a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .all-movement-datetime { font-size: 12px; color: #999; margin-top: 3px; }
+        .all-movement-amount { font-size: 13.5px; font-weight: 500; color: #e05555; white-space: nowrap; flex-shrink: 0; }
 
         /* ══ PASSWORD GATE ══ */
         #password-gate {
@@ -805,7 +850,7 @@
         </div>
     </div>
 
-    <!-- ══ PANTALLA PLIN ══ -->
+    <!-- ══ PANTALLA PLIN / OTROS BANCOS ══ -->
     <div id="screen-plin">
         <div class="plin-container">
             <div class="plin-header">
@@ -815,11 +860,12 @@
             </div>
             <div class="plin-content">
                 <button class="plin-option-btn" id="btnPlinOption">
-                    <svg width="40" height="40" viewBox="0 0 40 40" style="border-radius:10px;flex-shrink:0;">
-                        <rect width="40" height="40" rx="10" fill="#00B4D8"/>
-                        <text x="20" y="27" font-family="Arial" font-size="16" font-weight="bold" fill="white" text-anchor="middle">P</text>
-                    </svg>
+                    <img src="https://i.ibb.co/HppdCDCh/Logo-de-plin.png" alt="Plin">
                     Plin
+                </button>
+                <button class="plin-option-btn" id="btnYapeOption">
+                    <img src="https://i.ibb.co/8D6rbBs1/Icono-de-la-aplicaci-n-Yape.png" alt="Yape">
+                    Yape
                 </button>
             </div>
         </div>
@@ -859,7 +905,7 @@
     <div id="screen-all-movements">
         <div class="all-movements-header">
             <button class="all-movements-back" onclick="closeAllMovements()">&#8249;</button>
-            <span>Todos los movimientos</span>
+            <span>Movimientos</span>
             <div style="width:36px;"></div>
         </div>
         <div class="all-movements-list" id="all-movements-list"></div>
@@ -971,7 +1017,28 @@
             const hh = hours.toString().padStart(2, '0');
             const timeShort = `${hh}:${minutes} ${isPM ? 'pm' : 'am'}`;
             const timeLong  = `${hh}:${minutes} ${isPM ? 'p. m.' : 'a. m.'}`;
-            return { date, time: timeShort, timeBaucher: timeLong };
+            // Guardar también timestamp para calcular "Hoy"/"Ayer"/etc.
+            return { date, time: timeShort, timeBaucher: timeLong, timestamp: now.getTime() };
+        }
+
+        // ══ FECHA RELATIVA: Hoy/Ayer o fecha si >3 días ══
+        function formatRelativeDate(entry) {
+            const now = new Date();
+            const ts = entry.timestamp || null;
+
+            if (!ts) {
+                // Compatibilidad con entradas antiguas sin timestamp
+                return `${entry.date} - ${entry.time}`;
+            }
+
+            const entryDate = new Date(ts);
+            const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+            const entryStart = new Date(entryDate.getFullYear(), entryDate.getMonth(), entryDate.getDate());
+            const diffDays = Math.round((todayStart - entryStart) / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) return `Hoy - ${entry.time}`;
+            if (diffDays === 1) return `Ayer - ${entry.time}`;
+            return `${entry.date} - ${entry.time}`;
         }
 
         function escapeHtml(str) {
@@ -979,7 +1046,7 @@
         }
 
         function attachLongPress(container, fromAll) {
-            container.querySelectorAll('.movement-item').forEach(item => {
+            container.querySelectorAll('.movement-item, .all-movement-item').forEach(item => {
                 let pressTimer;
                 const handler = () => {
                     const idx = parseInt(item.getAttribute('data-index'));
@@ -1006,46 +1073,64 @@
             const visibles = hayMas ? reversed.slice(0, 7) : reversed;
             const itemsHTML = visibles.map((entry, i) => {
                 const realIndex = yapeHistory.length - 1 - i;
+                const displayName = entry.wasPlin ? `Plin - ${entry.name}` : entry.name;
+                const relDate = formatRelativeDate(entry);
                 return `
                 <div class="movement-item" onclick="viewHistoryReceipt(${realIndex})" data-index="${realIndex}">
                     <div class="movement-info">
-                        <div class="movement-name">${escapeHtml(entry.name)}</div>
-                        <div class="movement-datetime">${entry.date} - ${entry.time}</div>
+                        <div class="movement-name">${escapeHtml(displayName)}</div>
+                        <div class="movement-datetime">${relDate}</div>
                     </div>
                     <div class="movement-amount">-S/ ${entry.displayAmount}</div>
-                    <div class="movement-chevron">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5">
-                            <polyline points="9 6 15 12 9 18"/>
-                        </svg>
-                    </div>
                 </div>`;
             }).join('');
             const verTodosHTML = hayMas
-                ? `<div class="ver-todos-btn" onclick="openAllMovements()">Ver todos (${reversed.length})</div>`
+                ? `<div class="ver-todos-btn" onclick="openAllMovements()">Ver todos</div>`
                 : '';
             list.innerHTML = itemsHTML + verTodosHTML;
             attachLongPress(list, false);
         }
 
+        // ══ AGRUPAR POR MES/AÑO para pantalla "Movimientos" ══
+        function getMonthYearLabel(entry) {
+            const months = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+            if (entry.timestamp) {
+                const d = new Date(entry.timestamp);
+                return `${months[d.getMonth()]} ${d.getFullYear()}`;
+            }
+            // Fallback: parsear del campo "date" (e.g. "17 may. 2026")
+            return entry.date || '';
+        }
+
         function openAllMovements() {
             const allList  = document.getElementById('all-movements-list');
             const reversed = yapeHistory.slice().reverse();
-            allList.innerHTML = reversed.map((entry, i) => {
+
+            let html = '';
+            let lastGroup = '';
+
+            reversed.forEach((entry, i) => {
                 const realIndex = yapeHistory.length - 1 - i;
-                return `
-                <div class="movement-item" onclick="viewHistoryReceiptFromAll(${realIndex})" data-index="${realIndex}">
-                    <div class="movement-info">
-                        <div class="movement-name">${escapeHtml(entry.name)}</div>
-                        <div class="movement-datetime">${entry.date} - ${entry.time}</div>
+                const displayName = entry.wasPlin ? `Plin - ${entry.name}` : entry.name;
+                const relDate = formatRelativeDate(entry);
+                const group = getMonthYearLabel(entry);
+
+                if (group !== lastGroup) {
+                    html += `<div class="month-group-header">${escapeHtml(group)}</div>`;
+                    lastGroup = group;
+                }
+
+                html += `
+                <div class="all-movement-item" onclick="viewHistoryReceiptFromAll(${realIndex})" data-index="${realIndex}">
+                    <div class="all-movement-info">
+                        <div class="all-movement-name">${escapeHtml(displayName)}</div>
+                        <div class="all-movement-datetime">${relDate}</div>
                     </div>
-                    <div class="movement-amount">-S/ ${entry.displayAmount}</div>
-                    <div class="movement-chevron">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="2.5">
-                            <polyline points="9 6 15 12 9 18"/>
-                        </svg>
-                    </div>
+                    <div class="all-movement-amount">-S/ ${entry.displayAmount}</div>
                 </div>`;
-            }).join('');
+            });
+
+            allList.innerHTML = html;
             attachLongPress(allList, true);
             document.getElementById('screen-all-movements').classList.add('active');
         }
@@ -1121,13 +1206,14 @@
             document.getElementById('balanceValue').classList.add('hidden');
             document.getElementById('balanceLabel').textContent = 'Mostrar saldo';
             setEyeIcon(true);
-            if (movementsOpen) {
-                movementsOpen = false;
-                document.getElementById('movementsList').classList.remove('open');
-                document.getElementById('movementsArrow').classList.remove('open');
-                document.getElementById('movementsToggle').classList.remove('expanded');
-                document.getElementById('movementsSpacer').style.display = '';
-            }
+            // Siempre cerrar movimientos al entrar a Yapear, sin importar si estaban abiertos o no
+            movementsOpen = false;
+            document.getElementById('movementsList').classList.remove('open');
+            document.getElementById('movementsArrow').classList.remove('open');
+            document.getElementById('movementsToggle').classList.remove('expanded');
+            document.getElementById('movementsSpacer').style.display = '';
+            screenMain.classList.remove('scrollable');
+            screenMain.scrollTop = 0;
             screenMain.classList.add('slide-out');
             actionBtnsFixed.style.display = 'none';
             screenYapear.classList.add('slide-in');
@@ -1176,7 +1262,16 @@
 
         document.getElementById('btnPlinBack').addEventListener('click',   () => { screenPlin.classList.remove('active'); });
         document.getElementById('btnPlinClose').addEventListener('click',  () => { screenPlin.classList.remove('active'); closeYapear(); });
-        document.getElementById('btnPlinOption').addEventListener('click', () => { plinMode = true; screenPlin.classList.remove('active'); });
+
+        document.getElementById('btnPlinOption').addEventListener('click', () => {
+            plinMode = true;
+            screenPlin.classList.remove('active');
+        });
+
+        document.getElementById('btnYapeOption').addEventListener('click', () => {
+            plinMode = false;
+            screenPlin.classList.remove('active');
+        });
 
         // ══ CARRUSEL ══
         const carouselEl      = document.getElementById('carousel');
@@ -1299,6 +1394,17 @@
                 screenMain.scrollTop = 0;
             }
         });
+
+        screenMain.addEventListener('scroll', function() {
+            const list = document.getElementById('movementsList');
+            if (!movementsOpen || !list) return;
+            const listRect   = list.getBoundingClientRect();
+            const listBottom = listRect.bottom + screenMain.scrollTop;
+            const maxScroll  = listBottom - screenMain.clientHeight + 80;
+            if (screenMain.scrollTop > maxScroll && maxScroll > 0) {
+                screenMain.scrollTop = maxScroll;
+            }
+        }, { passive: true });
 
         document.querySelectorAll('.service-item, .header-btn, .action-btn').forEach(btn => {
             btn.addEventListener('touchstart', () => { btn.style.transform = 'scale(0.95)'; }, { passive: true });
@@ -1448,9 +1554,7 @@
             fontFamily: '"RobotoCanvas", "Roboto", sans-serif'
         };
 
-        // ══ dataURL del comprobante en ALTA CALIDAD para descarga ══
         let highResDataURL = null;
-        // ══ dataURL reducido para mostrar en pantalla ══
         let displayDataURL = null;
 
         // ══ CARGA DE FUENTE ROBOTO PARA EL CANVAS ══
@@ -1483,13 +1587,14 @@
             const displayAmount  = amount;
             const historyAmount  = parseFloat(amount) % 1 === 0 ? parseFloat(amount).toFixed(2) : amount;
             const formattedPhone = `*** *** ${phone.padStart(3, '0')}`;
-            const { date: formattedDate, time: formattedTime, timeBaucher } = formatDateTimeNow();
+            const { date: formattedDate, time: formattedTime, timeBaucher, timestamp } = formatDateTimeNow();
             const rand1 = Math.floor(Math.random() * 10);
             const rand2 = Math.floor(Math.random() * 10);
             const rand3 = Math.floor(Math.random() * 10);
             const operationCode = Array.from({ length: 8 }, () => Math.floor(Math.random() * 10)).join('');
             const destinoText   = plinMode ? 'Plin' : 'Yape';
-            const IMG_URL       = 'https://i.ibb.co/Q3T2F8N3/MENOS-CALIDAD-YAPE-BAUCHER-v8.png';
+            const wasPlin = plinMode;
+            const IMG_URL = 'https://i.ibb.co/Q3T2F8N3/MENOS-CALIDAD-YAPE-BAUCHER-v8.png';
 
             function loadImageAsDataUri(url) {
                 return fetch(url)
@@ -1512,7 +1617,6 @@
             ensureRobotoLoaded().then(() => loadImageAsDataUri(IMG_URL)).then(dataUri => {
                 const baseImage = new Image();
                 baseImage.onload = function () {
-                    // ── Canvas en resolución ORIGINAL (alta calidad) ──
                     const offCanvas = document.createElement('canvas');
                     offCanvas.width  = baseImage.naturalWidth;
                     offCanvas.height = baseImage.naturalHeight;
@@ -1556,10 +1660,8 @@
                     ctx.fillStyle = cfg.operationCode.color;
                     ctx.fillText(operationCode, cfg.operationCode.x, cfg.operationCode.y);
 
-                    // ── Alta calidad para DESCARGA: PNG sin pérdida ──
                     highResDataURL = offCanvas.toDataURL('image/png');
 
-                    // ── Versión reducida para MOSTRAR en pantalla (más rápido) ──
                     const displayCanvas = document.createElement('canvas');
                     const DISPLAY_SCALE = 0.6;
                     displayCanvas.width  = Math.round(offCanvas.width  * DISPLAY_SCALE);
@@ -1570,20 +1672,21 @@
                     dCtx.drawImage(offCanvas, 0, 0, displayCanvas.width, displayCanvas.height);
                     displayDataURL = displayCanvas.toDataURL('image/jpeg', 0.88);
 
-                    // ── Guardar en historial con la versión ALTA CALIDAD ──
+                    // Guardar timestamp para fechas relativas
                     yapeHistory.push({
                         name,
                         amount,
                         displayAmount: historyAmount,
                         date: formattedDate,
                         time: formattedTime,
-                        dataURL: highResDataURL   // Se guarda PNG de alta calidad
+                        timestamp: timestamp,
+                        dataURL: highResDataURL,
+                        wasPlin: wasPlin
                     });
                     saveData();
                     if (movementsOpen) renderMovements();
 
                     hideLoading();
-                    // Mostrar versión reducida en pantalla
                     document.getElementById('receiptImage').src = displayDataURL;
                     showReceiptScreen();
                 };
@@ -1631,7 +1734,6 @@
         function confirmDownload() {
             closeDownloadConfirm();
             if (!highResDataURL) return;
-            // Descarga el PNG de alta calidad
             const link = document.createElement('a');
             link.download = 'Yape_Comprobante.png';
             link.href = highResDataURL;
@@ -1662,19 +1764,16 @@
         function initGate() {
             const gate = document.getElementById('password-gate');
 
-            // Si ya está instalada como PWA, saltar gate directamente
             if (isRunningAsPWA()) {
                 gate.classList.add('gone');
                 return;
             }
 
-            // Si ya verificó en esta sesión, saltar gate
             if (sessionStorage.getItem('yape_gate_ok') === '1') {
                 gate.classList.add('gone');
                 return;
             }
 
-            // Mostrar gate
             gate.style.display = 'flex';
             setTimeout(() => {
                 document.getElementById('gateInput').focus();
@@ -1707,7 +1806,6 @@
                 err.textContent = 'Contraseña incorrecta. Inténtalo de nuevo.';
                 inp.value = '';
                 inp.focus();
-                // Shake animation
                 inp.style.animation = 'none';
                 inp.style.borderColor = 'rgba(255,80,80,0.7)';
                 setTimeout(() => { inp.style.borderColor = ''; }, 1200);
@@ -1719,7 +1817,6 @@
             sessionStorage.setItem('yape_gate_ok', '1');
 
             if (deferredInstallPrompt) {
-                // Hay prompt de instalación disponible → instalar
                 btn.textContent = 'Instalando...';
                 deferredInstallPrompt.prompt();
                 deferredInstallPrompt.userChoice.then((choiceResult) => {
@@ -1729,8 +1826,6 @@
                     document.getElementById('password-gate').classList.add('gone');
                 });
             } else {
-                // No hay prompt (ya instalada, iOS, o navegador no compatible)
-                // Mostrar instrucciones de instalación manual según el SO
                 const ua = navigator.userAgent.toLowerCase();
                 const isIOS = /iphone|ipad|ipod/.test(ua);
                 const isAndroid = /android/.test(ua);
@@ -1750,7 +1845,6 @@
                         document.getElementById('password-gate').classList.add('gone');
                     }, 3000);
                 } else {
-                    // Desktop u otro
                     document.getElementById('password-gate').classList.add('gone');
                 }
             }
